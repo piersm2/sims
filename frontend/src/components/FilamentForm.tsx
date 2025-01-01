@@ -1,7 +1,8 @@
-import { Fragment, useEffect } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { useForm } from 'react-hook-form'
 import { Filament, FilamentFormData, MATERIAL_TYPES, COMMON_DIAMETERS } from '../types/filament'
+import { API_URL } from '../config'
 
 interface FilamentFormProps {
   isOpen: boolean
@@ -11,7 +12,7 @@ interface FilamentFormProps {
 }
 
 export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: FilamentFormProps) {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FilamentFormData>({
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<FilamentFormData>({
     defaultValues: {
       name: '',
       material: 'PLA',
@@ -23,15 +24,51 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
     }
   })
 
+  const [manufacturers, setManufacturers] = useState<string[]>([])
+  const [filteredManufacturers, setFilteredManufacturers] = useState<string[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const manufacturerValue = watch('manufacturer')
+
   useEffect(() => {
     if (filament) {
       reset(filament)
     }
   }, [filament, reset])
 
+  useEffect(() => {
+    const fetchManufacturers = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/manufacturers`)
+        if (!response.ok) throw new Error('Failed to fetch manufacturers')
+        const data = await response.json()
+        setManufacturers(data)
+      } catch (error) {
+        console.error('Failed to fetch manufacturers:', error)
+      }
+    }
+    fetchManufacturers()
+  }, [])
+
+  useEffect(() => {
+    if (manufacturerValue) {
+      const filtered = manufacturers.filter(m => 
+        m.toLowerCase().includes(manufacturerValue.toLowerCase()) &&
+        m.toLowerCase() !== manufacturerValue.toLowerCase()
+      )
+      setFilteredManufacturers(filtered)
+    } else {
+      setFilteredManufacturers([])
+    }
+  }, [manufacturerValue, manufacturers])
+
   const onSubmitForm = (data: FilamentFormData) => {
     onSubmit(data)
     reset()
+  }
+
+  const handleManufacturerSelect = (manufacturer: string) => {
+    setValue('manufacturer', manufacturer)
+    setShowSuggestions(false)
   }
 
   return (
@@ -161,11 +198,31 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
                           <label className="block text-xs font-medium text-black uppercase tracking-wider">
                             {'>>'} Manufacturer Data
                           </label>
-                          <input
-                            type="text"
-                            {...register('manufacturer')}
-                            className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-2 text-black text-sm"
-                          />
+                          <div className="relative">
+                            <input
+                              type="text"
+                              {...register('manufacturer')}
+                              onFocus={() => setShowSuggestions(true)}
+                              onBlur={() => {
+                                // Delay hiding suggestions to allow clicking them
+                                setTimeout(() => setShowSuggestions(false), 200)
+                              }}
+                              className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-2 text-black placeholder-gray-500 text-sm"
+                            />
+                            {showSuggestions && filteredManufacturers.length > 0 && (
+                              <div className="absolute z-10 w-full mt-1 bg-white border-2 border-black shadow-lg max-h-48 overflow-auto">
+                                {filteredManufacturers.map((manufacturer) => (
+                                  <div
+                                    key={manufacturer}
+                                    className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"
+                                    onMouseDown={() => handleManufacturerSelect(manufacturer)}
+                                  >
+                                    {manufacturer}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
 
                         <div>

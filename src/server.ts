@@ -51,6 +51,17 @@ app.get('/api/filaments', async (req, res) => {
     }
 });
 
+app.get('/api/manufacturers', async (req, res) => {
+    try {
+        const manufacturers = await db.all(
+            'SELECT DISTINCT manufacturer FROM filaments WHERE manufacturer IS NOT NULL AND manufacturer != "" ORDER BY manufacturer'
+        );
+        res.json(manufacturers.map((m: { manufacturer: string }) => m.manufacturer));
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch manufacturers' });
+    }
+});
+
 app.post('/api/filaments', async (req, res) => {
     try {
         const {

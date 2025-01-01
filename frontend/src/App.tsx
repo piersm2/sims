@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react'
 import FilamentList from './components/FilamentList'
 import FilamentForm from './components/FilamentForm'
 import { Filament } from './types/filament'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://homeserver.local:8175'
+import { API_URL } from './config'
 
 function App() {
   const [filaments, setFilaments] = useState<Filament[]>([])
