@@ -1,45 +1,62 @@
 import express from 'express';
 import cors from 'cors';
 import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
-import path from 'path';
-import fs from 'fs';
+import { Database, open } from 'sqlite';
+import { dirname, join } from 'path';
+import fs from 'fs/promises';
 
 const app = express();
-const port = Number(process.env.PORT) || 8175;
-
 app.use(cors());
 app.use(express.json());
 
-// Ensure the db directory exists
-const dbDir = path.join(__dirname, '..', 'db');
-if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
-}
+const dbFile = join(__dirname, '..', 'db', 'filaments.db');
+const schemaFile = join(__dirname, 'db', 'schema.sql');
+const migrationFile = join(__dirname, 'db', 'migrations', 'remove_diameter.sql');
 
-// Database setup
-const dbPath = path.join(dbDir, 'filaments.db');
-let db: any;
+let db: Database;
 
-async function initializeDb() {
-    db = await open({
-        filename: dbPath,
-        driver: sqlite3.Database
-    });
-
-    // Read and execute schema
-    const schemaPath = path.join(__dirname, 'db', 'schema.sql');
-    console.log('Looking for schema at:', schemaPath);
-    
+async function initializeDatabase() {
     try {
-        const schema = fs.readFileSync(schemaPath, 'utf8');
-        await db.exec(schema);
-        console.log('Database schema initialized successfully');
+        // Ensure the db directory exists
+        await fs.mkdir(dirname(dbFile), { recursive: true });
+
+        // Open database
+        db = await open({
+            filename: dbFile,
+            driver: sqlite3.Database
+        });
+
+        // Check if this is a new database
+        const tableExists = await db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='filaments'");
+        
+        if (!tableExists) {
+            // If it's a new database, run the schema
+            const schema = await fs.readFile(schemaFile, 'utf8');
+            await db.exec(schema);
+        } else {
+            try {
+                // If the table exists, try to run the migration
+                const migration = await fs.readFile(migrationFile, 'utf8');
+                await db.exec(migration);
+                console.log('Migration completed successfully');
+            } catch (error) {
+                // If the migration fails (possibly because it was already run), just log it
+                console.log('Migration skipped or failed:', error instanceof Error ? error.message : String(error));
+            }
+        }
     } catch (error) {
-        console.error('Error reading schema:', error);
-        throw error;
+        console.error('Database initialization error:', error instanceof Error ? error.message : String(error));
+        process.exit(1);
     }
 }
+
+// Initialize database before starting the server
+initializeDatabase().then(() => {
+    const port = process.env.PORT || 8175;
+    app.listen(port, () => {
+        console.log(`Server running on port ${port}`);
+    });
+});
 
 // API Routes
 app.get('/api/filaments', async (req, res) => {
@@ -126,15 +143,6 @@ app.delete('/api/filaments/:id', async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete filament' });
     }
-});
-
-// Initialize database and start server
-initializeDb().then(() => {
-    app.listen(port, '0.0.0.0', () => {
-        console.log(`Server is running on port ${port}`);
-    });
-}).catch(error => {
-    console.error('Failed to initialize database:', error);
 });
 
 export default app; 

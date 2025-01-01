@@ -157,6 +157,7 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
                             <input
                               type="color"
                               {...register('color', { required: 'Color reference is required' })}
+                              onChange={(e) => setValue('color', e.target.value.toUpperCase())}
                               className="block w-16 h-16 bg-white border border-black rounded-none p-1 text-black"
                             />
                             <input
@@ -175,7 +176,7 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
                             type="number"
                             {...register('quantity', {
                               required: 'Inventory count is required',
-                              min: { value: 0, message: 'Count must be non-negative' }
+                              min: { value: 1, message: 'Count must be positive' }
                             })}
                             className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-3 text-black text-base"
                           />

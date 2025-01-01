@@ -25,5 +25,3 @@ export const MATERIAL_TYPES = [
     'TPU',
     'Other'
 ] as const;
-
-export const COMMON_DIAMETERS = [1.75, 2.85, 3.00] as const; 
