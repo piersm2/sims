@@ -67,7 +67,7 @@ app.post('/api/filaments', async (req, res) => {
             `INSERT INTO filaments (
                 name, material, color, diameter, quantity,
                 manufacturer, notes
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
             [name, material, color, diameter, quantity, manufacturer, notes]
         );
 
