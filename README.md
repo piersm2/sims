@@ -94,3 +94,38 @@ The application is containerized using Docker, making it easy to develop and dep
 - Volume mounts for live code updates
 - Persistent database storage
 - Automatic container restart on crashes 
+
+## Docker Hub Deployment
+
+The application is available on Docker Hub and can be pulled using:
+
+```bash
+docker pull joshpigford/sims:latest
+```
+
+To run the pulled image:
+
+```bash
+docker run -d \
+  -p 8174:8174 \
+  -p 8175:8175 \
+  -v sims-db:/app/db \
+  joshpigford/sims:latest
+```
+
+### Building and Publishing
+
+If you want to build and publish your own version:
+
+1. Build the image:
+   ```bash
+   docker build -t yourusername/sims:latest .
+   ```
+
+2. Push to Docker Hub:
+   ```bash
+   docker login
+   docker push yourusername/sims:latest
+   ```
+
+Note: The database file (`db/filaments.db`) is not included in the Docker image and will be created fresh when the container starts. Use Docker volumes to persist your data. 
