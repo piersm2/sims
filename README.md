@@ -12,6 +12,7 @@ A modern web application to track your 3D printer filament inventory. Built with
 - Color visualization
 - Offline-capable with SQLite database
 - Modern, responsive UI
+- Containerized deployment with Docker
 
 ## Tech Stack
 
@@ -28,6 +29,21 @@ A modern web application to track your 3D printer filament inventory. Built with
   - TypeScript
 
 ## Setup
+
+### Using Docker (Recommended)
+
+1. Make sure you have Docker and Docker Compose installed on your system.
+
+2. Start the application:
+   ```bash
+   docker-compose up -d
+   ```
+
+3. Open your browser and navigate to:
+   - Frontend: http://localhost:8174
+   - Backend API: http://localhost:8175
+
+### Manual Setup
 
 1. Install dependencies:
    ```bash
@@ -62,9 +78,19 @@ The application uses SQLite, which stores data in a local file (`db/filaments.db
 - Easy to backup
 - No need for a separate database server
 
+When using Docker, the database file is persisted using a Docker volume.
+
 ## API Endpoints
 
 - `GET /api/filaments` - List all filaments
 - `POST /api/filaments` - Add a new filament
 - `PUT /api/filaments/:id` - Update a filament
-- `DELETE /api/filaments/:id` - Delete a filament 
+- `DELETE /api/filaments/:id` - Delete a filament
+
+## Development
+
+The application is containerized using Docker, making it easy to develop and deploy. The Docker setup includes:
+- Hot-reloading for both frontend and backend
+- Volume mounts for live code updates
+- Persistent database storage
+- Automatic container restart on crashes 
