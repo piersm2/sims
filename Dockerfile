@@ -37,7 +37,9 @@ COPY database/ ./database/
 RUN npm run build
 
 # Copy database files to dist
-RUN mkdir -p dist/database && cp -r database/* dist/database/
+RUN mkdir -p dist/database/migrations && \
+    cp -r database/* dist/database/ && \
+    cp -r database/migrations/* dist/database/migrations/
 
 # Production stage
 FROM node:20-slim

@@ -27,19 +27,24 @@ async function initializeDatabase() {
       driver: sqlite3.Database
     });
 
-    await runMigrations(db);
-
     // Check if database needs initialization
     const tableExists = await db.get(
       "SELECT name FROM sqlite_master WHERE type='table' AND name='filaments'"
     );
 
     if (!tableExists) {
-      const schema = await fs.readFile(SCHEMA_PATH, 'utf8');
-      await db.exec(schema);
+      try {
+        const schema = await fs.readFile(SCHEMA_PATH, 'utf8');
+        await db.exec(schema);
+      } catch (error) {
+        console.log('Schema file not found, running initial migration directly');
+        const initialSchema = await fs.readFile(join(MIGRATIONS_PATH, '001_initial_schema.sql'), 'utf8');
+        await db.exec(initialSchema);
+      }
       console.log('Database initialized with schema');
     }
 
+    await runMigrations(db);
     return db;
   } catch (error) {
     console.error('Database initialization error:', error);
