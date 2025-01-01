@@ -28,12 +28,15 @@ async function setupMigrationDirectory() {
     // Ensure the migrations directory exists
     await fsExtra.ensureDir(distMigrationsDir);
     
-    // Copy all migration files
-    await fsExtra.copy(srcMigrationsDir, distMigrationsDir, {
-        filter: (src: string) => {
-            return src.endsWith('.sql');
-        }
-    });
+    // Only copy if source and destination are different
+    if (srcMigrationsDir !== distMigrationsDir) {
+        // Copy all migration files
+        await fsExtra.copy(srcMigrationsDir, distMigrationsDir, {
+            filter: (src: string) => {
+                return src.endsWith('.sql');
+            }
+        });
+    }
 }
 
 async function initializeDatabase() {
