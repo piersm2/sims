@@ -114,7 +114,7 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
                   <div className="flex-1 py-4 sm:py-6 overflow-y-auto px-4 sm:px-6">
                     <div className="border-b-2 border-black pb-3">
                       <Dialog.Title className="text-lg font-medium text-black tracking-wider pr-8">
-                        {filament ? 'MODIFY EXISTING RECORD' : 'CREATE NEW RECORD'}
+                        {filament ? 'MODIFY EXISTING FILAMENT' : 'CREATE NEW FILAMENT'}
                       </Dialog.Title>
                       <div className="text-xs mt-1 text-gray-600">
                         SIMS DATABASE MANAGEMENT INTERFACE
@@ -133,10 +133,11 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
                       <div className="space-y-5 sm:space-y-6">
                         <div>
                           <label className="block text-xs font-medium text-black uppercase tracking-wider mb-2">
-                            {'>>'} Record Name
+                            {'>>'} Filament Name
                           </label>
                           <input
                             type="text"
+                            autoComplete="off"
                             {...register('name', { required: 'Record name is required' })}
                             className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-3 text-black placeholder-gray-500 text-base"
                           />
