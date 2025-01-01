@@ -1,6 +1,6 @@
-# Spool - 3D Printer Filament Inventory Manager
+# SIMS: Spool Inventory Management System
 
-A modern web application to track your 3D printer filament inventory. Built with React, TypeScript, and SQLite.
+A modern web app to track your 3D printer filament inventory. It's built with React, TypeScript, and SQLite.
 
 ![CleanShot 2024-12-31 at 19 26 25@2x](https://github.com/user-attachments/assets/37979d7f-9ca2-42ba-b475-0cd54b84b5a3)
 
