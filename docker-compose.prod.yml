@@ -10,6 +10,13 @@ services:
       - "8175:8175"
     restart: unless-stopped
 
+  watchtower:
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 30 --cleanup
+    restart: unless-stopped
+
 volumes:
   db-data:
     name: sims-db-data 
