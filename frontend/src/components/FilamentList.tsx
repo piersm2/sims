@@ -182,7 +182,11 @@ export default function FilamentList({ filaments, onUpdate, onDelete }: Filament
                         EDIT
                       </button>
                       <button
-                        onClick={() => onDelete(filament.id!)}
+                        onClick={() => {
+                          if (window.confirm('Are you sure you want to delete this filament?')) {
+                            onDelete(filament.id!)
+                          }
+                        }}
                         className="px-4 py-1 border border-black text-xs font-bold text-white bg-red-600 hover:bg-red-700 transition-colors uppercase tracking-wider"
                       >
                         DELETE
@@ -238,7 +242,11 @@ export default function FilamentList({ filaments, onUpdate, onDelete }: Filament
                     EDIT
                   </button>
                   <button
-                    onClick={() => onDelete(filament.id!)}
+                    onClick={() => {
+                      if (window.confirm('Are you sure you want to delete this filament?')) {
+                        onDelete(filament.id!)
+                      }
+                    }}
                     className="px-4 py-1 border border-black text-xs font-bold text-white bg-red-600 hover:bg-red-700 transition-colors uppercase tracking-wider"
                   >
                     DELETE
