@@ -17,7 +17,7 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
       name: '',
       material: 'PLA',
       color: '#000000',
-      quantity: 0,
+      quantity: 1,
       manufacturer: '',
       notes: ''
     }
@@ -176,7 +176,7 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
                             type="number"
                             {...register('quantity', {
                               required: 'Inventory count is required',
-                              min: { value: 1, message: 'Count must be positive' }
+                              min: { value: 0, message: 'Count must be positive' }
                             })}
                             className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-3 text-black text-base"
                           />
