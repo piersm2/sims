@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { useForm } from 'react-hook-form'
-import { Filament, FilamentFormData, MATERIAL_TYPES, COMMON_DIAMETERS } from '../types/filament'
+import { Filament, FilamentFormData, MATERIAL_TYPES } from '../types/filament'
 import { API_URL } from '../config'
 
 interface FilamentFormProps {
@@ -17,7 +17,6 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
       name: '',
       material: 'PLA',
       color: '#000000',
-      diameter: 1.75,
       quantity: 0,
       manufacturer: '',
       notes: ''
@@ -159,22 +158,6 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
                             {...register('color', { required: 'Color reference is required' })}
                             className="mt-1 block w-full h-10 bg-white border border-black rounded-none p-1 text-black text-sm"
                           />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-medium text-black uppercase tracking-wider">
-                            {'>>'} Diameter Parameter
-                          </label>
-                          <select
-                            {...register('diameter', { required: 'Diameter parameter is required' })}
-                            className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-2 text-black text-sm"
-                          >
-                            {COMMON_DIAMETERS.map((diameter) => (
-                              <option key={diameter} value={diameter}>
-                                {diameter}mm
-                              </option>
-                            ))}
-                          </select>
                         </div>
 
                         <div>

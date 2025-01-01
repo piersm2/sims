@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Filament } from '../types/filament'
 import FilamentForm from './FilamentForm'
 
-type SortField = 'name' | 'material' | 'diameter' | 'quantity' | 'manufacturer'
+type SortField = 'name' | 'material' | 'quantity' | 'manufacturer'
 type SortDirection = 'asc' | 'desc'
 
 interface FilamentListProps {
@@ -120,13 +120,6 @@ export default function FilamentList({ filaments, onUpdate, onDelete }: Filament
                 <th
                   scope="col"
                   className="py-3 px-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:text-gray-300"
-                  onClick={() => handleSort('diameter')}
-                >
-                  Diameter Parameter {getSortIcon('diameter')}
-                </th>
-                <th
-                  scope="col"
-                  className="py-3 px-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:text-gray-300"
                   onClick={() => handleSort('quantity')}
                 >
                   Inventory Count {getSortIcon('quantity')}
@@ -157,9 +150,6 @@ export default function FilamentList({ filaments, onUpdate, onDelete }: Filament
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap text-sm text-black border-r-2 border-black">
                     {filament.material}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-sm text-black border-r-2 border-black">
-                    {filament.diameter}mm
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap text-sm text-black border-r-2 border-black">
                     <div className="flex items-center space-x-2">

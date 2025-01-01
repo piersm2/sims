@@ -3,7 +3,6 @@ export interface Filament {
     name: string;
     material: string;
     color: string;
-    diameter: number;
     quantity: number;
     manufacturer?: string;
     notes?: string;
