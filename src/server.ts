@@ -48,33 +48,47 @@ async function initializeDatabase() {
 }
 
 async function runMigrations(db: Database) {
-    const migrationsDir = join(process.cwd(), 'database', 'migrations');
-    const migrations = await fs.readdir(migrationsDir);
-    
-    // Get current schema version
-    await db.run(`CREATE TABLE IF NOT EXISTS schema_versions (
-        version INTEGER PRIMARY KEY,
-        applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-    
-    const currentVersion = await db.get('SELECT MAX(version) as version FROM schema_versions');
-    const dbVersion = currentVersion?.version || 0;
-    
-    // Sort migrations numerically
-    const pendingMigrations = migrations
-        .filter(f => f.endsWith('.sql'))
-        .sort((a, b) => {
-            const vA = parseInt(a.split('_')[0]);
-            const vB = parseInt(b.split('_')[0]);
-            return vA - vB;
-        })
-        .filter(f => parseInt(f.split('_')[0]) > dbVersion);
+    try {
+        // Ensure migrations directory exists
+        await fs.mkdir(MIGRATIONS_PATH, { recursive: true });
+        
+        // Get list of migrations, or empty array if none exist
+        let migrations = [];
+        try {
+            migrations = await fs.readdir(MIGRATIONS_PATH);
+        } catch (error) {
+            console.log('No migrations found, continuing with initialization');
+            return;
+        }
+        
+        // Get current schema version
+        await db.run(`CREATE TABLE IF NOT EXISTS schema_versions (
+            version INTEGER PRIMARY KEY,
+            applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
+        
+        const currentVersion = await db.get('SELECT MAX(version) as version FROM schema_versions');
+        const dbVersion = currentVersion?.version || 0;
+        
+        // Sort migrations numerically
+        const pendingMigrations = migrations
+            .filter(f => f.endsWith('.sql'))
+            .sort((a, b) => {
+                const vA = parseInt(a.split('_')[0]);
+                const vB = parseInt(b.split('_')[0]);
+                return vA - vB;
+            })
+            .filter(f => parseInt(f.split('_')[0]) > dbVersion);
 
-    // Run pending migrations in order
-    for (const migration of pendingMigrations) {
-        const sql = await fs.readFile(join(migrationsDir, migration), 'utf8');
-        await db.exec(sql);
-        console.log(`Applied migration: ${migration}`);
+        // Run pending migrations in order
+        for (const migration of pendingMigrations) {
+            const sql = await fs.readFile(join(MIGRATIONS_PATH, migration), 'utf8');
+            await db.exec(sql);
+            console.log(`Applied migration: ${migration}`);
+        }
+    } catch (error) {
+        console.error('Migration error:', error);
+        // Don't exit process, allow initialization to continue
     }
 }
 
