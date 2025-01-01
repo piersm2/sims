@@ -228,15 +228,8 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
 
                         <div className="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-6 mt-6 border-t-2 border-black">
                           <button
-                            type="button"
-                            onClick={onClose}
-                            className="w-full sm:w-auto px-6 py-3 border-2 border-black rounded-none text-sm font-medium text-black bg-white hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-colors uppercase tracking-wider"
-                          >
-                            [X] TERMINATE
-                          </button>
-                          <button
                             type="submit"
-                            className="w-full sm:w-auto px-6 py-3 border-2 border-black rounded-none text-sm font-medium text-white bg-black hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-colors uppercase tracking-wider"
+                            className="w-full px-6 py-3 border-2 border-black rounded-none text-sm font-medium text-white bg-black hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-colors uppercase tracking-wider"
                           >
                             {filament ? '[+] UPDATE' : '[+] CREATE'}
                           </button>
