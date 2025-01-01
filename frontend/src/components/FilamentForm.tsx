@@ -70,6 +70,19 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
     setShowSuggestions(false)
   }
 
+  const AdditionalParametersField = (
+    <div>
+      <label className="block text-xs font-medium text-black uppercase tracking-wider mb-2">
+        {'>>'} Additional Parameters
+      </label>
+      <textarea
+        {...register('notes')}
+        rows={1}
+        className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-3 text-black text-base"
+      />
+    </div>
+  )
+
   return (
     <Transition.Root show={isOpen} as={Fragment}>
       <Dialog as="div" className="fixed inset-0 overflow-hidden z-50 font-mono" onClose={onClose}>
@@ -214,16 +227,7 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
                           </div>
                         </div>
 
-                        <div>
-                          <label className="block text-xs font-medium text-black uppercase tracking-wider mb-2">
-                            {'>>'} Additional Parameters
-                          </label>
-                          <textarea
-                            {...register('notes')}
-                            rows={1}
-                            className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-3 text-black text-base"
-                          />
-                        </div>
+                        {filament && AdditionalParametersField}
 
                         <div className="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-6 mt-6 border-t-2 border-black">
                           <button
