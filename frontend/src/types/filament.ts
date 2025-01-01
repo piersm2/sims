@@ -14,15 +14,16 @@ export interface Filament {
 export type FilamentFormData = Omit<Filament, 'id' | 'created_at' | 'updated_at'>;
 
 export const MATERIAL_TYPES = [
-    'PLA',
-    'PETG',
     'ABS',
-    'TPU',
-    'Nylon',
-    'PC',
     'ASA',
+    'PAHT-CF',
+    'PC',
+    'PETG',
+    'PETG-CF',
+    'PLA',
+    'PLA+WOOD',
     'PVA',
-    'HIPS',
+    'TPU',
     'Other'
 ] as const;
 
