@@ -37,9 +37,9 @@ COPY database/ ./database/
 RUN npm run build
 
 # Copy database files to dist
-RUN mkdir -p dist/database/migrations && \
-    cp -r database/* dist/database/ && \
-    cp -r database/migrations/* dist/database/migrations/
+RUN mkdir -p dist/database && \
+    cp -r database dist/ && \
+    mkdir -p /app/database/migrations
 
 # Production stage
 FROM node:20-slim
@@ -63,10 +63,9 @@ COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 # Copy database files
 COPY --from=backend-builder /app/database ./database
 
-# Create database directories
-RUN mkdir -p /app/db && mkdir -p /app/database/migrations && \
-    cp -r database/* /app/database/ && \
-    cp -r database/migrations/* /app/database/migrations/
+# Create database directories and copy files
+RUN mkdir -p /app/db /app/database/migrations && \
+    cp -r database/* /app/database/
 
 # Copy start script
 COPY start.sh ./
