@@ -45,3 +45,6 @@ db/*.sqlite3
 *.sw?
 sims.log
 sims.error.log
+
+# Make sure we don't exclude SQL files
+!*.sql

@@ -3,7 +3,8 @@ import cors from 'cors';
 import sqlite3 from 'sqlite3';
 import { Database, open } from 'sqlite';
 import { dirname, join } from 'path';
-import fs from 'fs/promises';
+import fsPromises from 'fs/promises';
+import fsExtra from 'fs-extra';
 
 const app = express();
 app.use(cors());
@@ -15,10 +16,28 @@ const migrationFile = join(__dirname, 'db', 'migrations', 'remove_diameter.sql')
 
 let db: Database;
 
+async function setupMigrationDirectory() {
+    const srcMigrationsDir = join(__dirname, 'db', 'migrations');
+    const distMigrationsDir = join(__dirname, '..', 'dist', 'db', 'migrations');
+    
+    // Ensure the migrations directory exists
+    await fsExtra.ensureDir(distMigrationsDir);
+    
+    // Copy all migration files
+    await fsExtra.copy(srcMigrationsDir, distMigrationsDir, {
+        filter: (src: string) => {
+            return src.endsWith('.sql');
+        }
+    });
+}
+
 async function initializeDatabase() {
     try {
         // Ensure the db directory exists
-        await fs.mkdir(dirname(dbFile), { recursive: true });
+        await fsPromises.mkdir(dirname(dbFile), { recursive: true });
+        
+        // Add the migration directory setup
+        await setupMigrationDirectory();
 
         // Open database
         db = await open({
@@ -31,12 +50,12 @@ async function initializeDatabase() {
         
         if (!tableExists) {
             // If it's a new database, run the schema
-            const schema = await fs.readFile(schemaFile, 'utf8');
+            const schema = await fsPromises.readFile(schemaFile, 'utf8');
             await db.exec(schema);
         } else {
             try {
                 // If the table exists, try to run the migration
-                const migration = await fs.readFile(migrationFile, 'utf8');
+                const migration = await fsPromises.readFile(migrationFile, 'utf8');
                 await db.exec(migration);
                 console.log('Migration completed successfully');
             } catch (error) {
