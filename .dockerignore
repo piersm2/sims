@@ -1,9 +1,0 @@
-node_modules
-npm-debug.log
-db/*.db
-.git
-.gitignore
-.env
-*.md
-frontend/node_modules
-frontend/dist 
