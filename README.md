@@ -7,9 +7,7 @@ A modern web app to track your 3D printer filament inventory. It's built with Re
 ## Features
 
 - Track multiple filaments with detailed information
-- Monitor remaining filament weights
 - Material type categorization
-- Cost tracking
 - Manufacturer information
 - Color visualization
 - Offline-capable with SQLite database
