@@ -1,5 +1,5 @@
 BEGIN TRANSACTION;
 
-ALTER TABLE filaments DROP COLUMN diameter;
+-- ALTER TABLE filaments DROP COLUMN diameter;
 
 COMMIT;
