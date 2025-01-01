@@ -115,6 +115,8 @@ docker run -d \
 
 ### Building and Publishing
 
+The repository is configured with GitHub Actions to automatically build and push the Docker image to Docker Hub whenever changes are pushed to the main branch.
+
 If you want to build and publish your own version:
 
 1. Build the image:
