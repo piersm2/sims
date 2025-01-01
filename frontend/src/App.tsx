@@ -3,7 +3,7 @@ import FilamentList from './components/FilamentList'
 import FilamentForm from './components/FilamentForm'
 import { Filament } from './types/filament'
 
-const API_URL = import.meta.env.VITE_API_URL
+const API_URL = import.meta.env.VITE_API_URL || 'http://homeserver.local:8175'
 
 function App() {
   const [filaments, setFilaments] = useState<Filament[]>([])

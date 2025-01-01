@@ -9,6 +9,7 @@ services:
         - "linux/amd64"
         - "linux/arm64"
     image: joshpigford/sims:latest
+    pull_policy: always
     volumes:
       - db-data:/app/db
     ports:
@@ -16,6 +17,13 @@ services:
       - "8175:8175"
     environment:
       - VITE_API_URL=http://homeserver.local:8175
+    restart: unless-stopped
+
+  watchtower:
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 30
     restart: unless-stopped
 
 volumes:
