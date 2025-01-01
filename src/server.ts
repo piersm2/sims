@@ -6,7 +6,7 @@ import path from 'path';
 import fs from 'fs';
 
 const app = express();
-const port = process.env.PORT || 8175;
+const port = Number(process.env.PORT) || 8175;
 
 app.use(cors());
 app.use(express.json());
@@ -112,7 +112,7 @@ app.delete('/api/filaments/:id', async (req, res) => {
 
 // Initialize database and start server
 initializeDb().then(() => {
-    app.listen(port, () => {
+    app.listen(port, '0.0.0.0', () => {
         console.log(`Server running at http://localhost:${port}`);
     });
 }).catch(error => {
