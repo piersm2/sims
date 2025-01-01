@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS filaments (
     name TEXT NOT NULL,
     material TEXT NOT NULL,
     color TEXT NOT NULL,
-    quantity INTEGER NOT NULL DEFAULT 0,
+    quantity INTEGER NOT NULL DEFAULT 1,
     manufacturer TEXT,
     notes TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
