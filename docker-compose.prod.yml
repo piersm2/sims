@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  app:
+    image: joshpigford/sims:latest
+    volumes:
+      - db-data:/app/db
+    ports:
+      - "5173:5173"
+      - "8175:8175"
+    restart: unless-stopped
+
+volumes:
+  db-data:
+    name: sims-db-data 

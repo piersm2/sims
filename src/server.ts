@@ -28,8 +28,17 @@ async function initializeDb() {
     });
 
     // Read and execute schema
-    const schema = fs.readFileSync(path.join(__dirname, 'db', 'schema.sql'), 'utf8');
-    await db.exec(schema);
+    const schemaPath = path.join(__dirname, 'db', 'schema.sql');
+    console.log('Looking for schema at:', schemaPath);
+    
+    try {
+        const schema = fs.readFileSync(schemaPath, 'utf8');
+        await db.exec(schema);
+        console.log('Database schema initialized successfully');
+    } catch (error) {
+        console.error('Error reading schema:', error);
+        throw error;
+    }
 }
 
 // API Routes
