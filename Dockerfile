@@ -31,15 +31,13 @@ RUN npm install
 
 # Copy backend source and schema
 COPY src/ ./src/
-
-# Ensure db directory exists in source
-RUN mkdir -p src/db
+COPY database/ ./database/
 
 # Build backend
 RUN npm run build
 
-# Copy schema to dist folder
-RUN mkdir -p dist/db && cp src/db/schema.sql dist/db/
+# Copy database files to dist
+RUN mkdir -p dist/database && cp -r database/* dist/database/
 
 # Production stage
 FROM node:20-slim
