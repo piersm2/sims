@@ -1,1 +1,19 @@
 node_modules
+
+# Docker
+.docker
+docker-compose.override.yml
+
+# Docker build context
+.dockerignore
+
+# Docker environment variables
+.env
+.env.local
+.env.*.local
+
+# Docker volumes
+docker-volumes/
+
+# Database
+db/filaments.db
