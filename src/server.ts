@@ -3,77 +3,77 @@ import cors from 'cors';
 import sqlite3 from 'sqlite3';
 import { Database, open } from 'sqlite';
 import { dirname, join } from 'path';
-import fsPromises from 'fs/promises';
-import fsExtra from 'fs-extra';
+import fs from 'fs/promises';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const dbFile = join(__dirname, '..', 'db', 'filaments.db');
-const schemaFile = join(__dirname, 'db', 'schema.sql');
-const migrationFile = join(__dirname, 'db', 'migrations', 'remove_diameter.sql');
+// Simplified database path - always in project root
+const DB_PATH = join(process.cwd(), 'database', 'filaments.db');
+const SCHEMA_PATH = join(process.cwd(), 'database', 'schema.sql');
 
 let db: Database;
 
-async function setupMigrationDirectory() {
-    // In production, the files are already in the correct location
-    if (__dirname.includes('dist')) {
-        return;
+async function initializeDatabase() {
+  try {
+    // Ensure database directory exists
+    await fs.mkdir(dirname(DB_PATH), { recursive: true });
+
+    // Open database connection
+    db = await open({
+      filename: DB_PATH,
+      driver: sqlite3.Database
+    });
+
+    await runMigrations(db);
+
+    // Check if database needs initialization
+    const tableExists = await db.get(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='filaments'"
+    );
+
+    if (!tableExists) {
+      const schema = await fs.readFile(SCHEMA_PATH, 'utf8');
+      await db.exec(schema);
+      console.log('Database initialized with schema');
     }
 
-    const srcMigrationsDir = join(__dirname, 'db', 'migrations');
-    const distMigrationsDir = join(__dirname, '..', 'dist', 'db', 'migrations');
-    
-    // Ensure the migrations directory exists
-    await fsExtra.ensureDir(distMigrationsDir);
-    
-    // Only copy if source and destination are different
-    if (srcMigrationsDir !== distMigrationsDir) {
-        // Copy all migration files
-        await fsExtra.copy(srcMigrationsDir, distMigrationsDir, {
-            filter: (src: string) => {
-                return src.endsWith('.sql');
-            }
-        });
-    }
+    return db;
+  } catch (error) {
+    console.error('Database initialization error:', error);
+    process.exit(1);
+  }
 }
 
-async function initializeDatabase() {
-    try {
-        // Ensure the db directory exists
-        await fsPromises.mkdir(dirname(dbFile), { recursive: true });
-        
-        // Add the migration directory setup
-        await setupMigrationDirectory();
+async function runMigrations(db: Database) {
+    const migrationsDir = join(process.cwd(), 'database', 'migrations');
+    const migrations = await fs.readdir(migrationsDir);
+    
+    // Get current schema version
+    await db.run(`CREATE TABLE IF NOT EXISTS schema_versions (
+        version INTEGER PRIMARY KEY,
+        applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+    
+    const currentVersion = await db.get('SELECT MAX(version) as version FROM schema_versions');
+    const dbVersion = currentVersion?.version || 0;
+    
+    // Sort migrations numerically
+    const pendingMigrations = migrations
+        .filter(f => f.endsWith('.sql'))
+        .sort((a, b) => {
+            const vA = parseInt(a.split('_')[0]);
+            const vB = parseInt(b.split('_')[0]);
+            return vA - vB;
+        })
+        .filter(f => parseInt(f.split('_')[0]) > dbVersion);
 
-        // Open database
-        db = await open({
-            filename: dbFile,
-            driver: sqlite3.Database
-        });
-
-        // Check if this is a new database
-        const tableExists = await db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='filaments'");
-        
-        if (!tableExists) {
-            // If it's a new database, run the schema
-            const schema = await fsPromises.readFile(schemaFile, 'utf8');
-            await db.exec(schema);
-        } else {
-            try {
-                // If the table exists, try to run the migration
-                const migration = await fsPromises.readFile(migrationFile, 'utf8');
-                await db.exec(migration);
-                console.log('Migration completed successfully');
-            } catch (error) {
-                // If the migration fails (possibly because it was already run), just log it
-                console.log('Migration skipped or failed:', error instanceof Error ? error.message : String(error));
-            }
-        }
-    } catch (error) {
-        console.error('Database initialization error:', error instanceof Error ? error.message : String(error));
-        process.exit(1);
+    // Run pending migrations in order
+    for (const migration of pendingMigrations) {
+        const sql = await fs.readFile(join(migrationsDir, migration), 'utf8');
+        await db.exec(sql);
+        console.log(`Applied migration: ${migration}`);
     }
 }
 

@@ -28,12 +28,11 @@ yarn-error.log*
 .env.local
 
 # Database
-db/*.db
-db/*.sqlite
-db/*.sqlite3
-!src/db/
-!src/db/schema.sql
-!src/db/migrations/
+database/*.db
+database/*.sqlite
+database/*.sqlite3
+!database/schema.sql
+!database/migrations/
 
 # Editor directories and files
 .idea/
