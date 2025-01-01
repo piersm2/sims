@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'TX-02';
+  src: url('./assets/fonts/TX-02-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+}
+
+:root {
+  font-family: 'TX-02', monospace;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light;
+  color: black;
+  background-color: white;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+* {
+  font-family: 'TX-02', monospace;
+}
+
+input, select, textarea {
+  font-family: 'TX-02', monospace !important;
+}
+
+::placeholder {
+  font-family: 'TX-02', monospace !important;
+  opacity: 0.5;
+}
+
+button {
+  font-family: 'TX-02', monospace !important;
+  letter-spacing: 0.05em;
+}
+
+/* Custom scrollbar for a more terminal-like appearance */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: white;
+  border: 2px solid black;
+}
+
+::-webkit-scrollbar-thumb {
+  background: black;
+  border: 2px solid black;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* Remove default focus rings and add custom ones */
+*:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+*:focus-visible {
+  outline: 2px solid black !important;
+  outline-offset: 2px !important;
+}
