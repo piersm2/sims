@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 // Database paths relative to project root
-const DB_PATH = join(process.cwd(), 'database', 'filaments.db');
+const DB_PATH = join(process.cwd(), 'db', 'filaments.db');
 const SCHEMA_PATH = join(process.cwd(), 'database', 'schema.sql');
 const MIGRATIONS_PATH = join(process.cwd(), 'database', 'migrations');
 
