@@ -64,7 +64,7 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
                 <div className="h-full flex flex-col bg-white border-l-2 border-black overflow-y-scroll">
                   <div className="flex-1 py-6 overflow-y-auto px-4 sm:px-6">
                     <div className="border-b-2 border-black pb-3">
-                      <div className="text-xs text-right mb-1 text-gray-600">SIMS FORM TX-02</div>
+                      <div className="text-xs text-right mb-1 text-gray-600">SIMS FORM</div>
                       <Dialog.Title className="text-lg font-medium text-black tracking-wider">
                         {filament ? 'MODIFY EXISTING RECORD' : 'CREATE NEW RECORD'}
                       </Dialog.Title>

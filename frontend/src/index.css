@@ -2,15 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: 'TX-02';
-  src: url('./assets/fonts/TX-02-Variable.woff2') format('woff2');
-  font-weight: 100 900;
-  font-style: normal;
-}
-
 :root {
-  font-family: 'TX-02', monospace;
+  font-family: 'Geist Mono', monospace;
   line-height: 1.5;
   font-weight: 400;
 
@@ -26,20 +19,20 @@
 }
 
 * {
-  font-family: 'TX-02', monospace;
+  font-family: 'Geist Mono', monospace;
 }
 
 input, select, textarea {
-  font-family: 'TX-02', monospace !important;
+  font-family: 'Geist Mono', monospace !important;
 }
 
 ::placeholder {
-  font-family: 'TX-02', monospace !important;
+  font-family: 'Geist Mono', monospace !important;
   opacity: 0.5;
 }
 
 button {
-  font-family: 'TX-02', monospace !important;
+  font-family: 'Geist Mono', monospace !important;
   letter-spacing: 0.05em;
 }
 
