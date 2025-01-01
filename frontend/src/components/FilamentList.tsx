@@ -65,14 +65,14 @@ export default function FilamentList({ filaments, onUpdate, onDelete }: Filament
           onClose={() => setEditingFilament(null)}
         />
       )}
-      <div className="border-2 border-black">
-        <div className="border-b-2 border-black px-4 py-2 pr-2">
-          <div className="flex flex-col space-y-4">
-            <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+      <div className="border-0 sm:border-2 sm:border-black">
+        <div className="border-b-2 border-black px-0 sm:px-4 py-2">
+          <div className="flex flex-col space-y-2">
+            <div className="flex flex-col space-y-2 pt-0 px-3 sm:px-0 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
               <div className="flex-1">
-                <div className="flex flex-col space-y-4 sm:flex-row sm:items-baseline sm:space-y-0 sm:space-x-4">
+                <div className="flex flex-col space-y-1 sm:flex-row sm:items-baseline sm:space-y-0 sm:space-x-4">
                   <h1 className="text-lg font-medium text-black tracking-wider">FILAMENT INVENTORY RECORDS</h1>
-                  <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2 text-xs">
+                  <div className="flex flex-row space-y-0 space-x-2 text-xs">
                     <div className="flex">
                       <div className="bg-black text-white px-2 py-1 font-bold">FILAMENTS</div>
                       <div className="border border-black px-2 py-1 font-mono tracking-wider">
@@ -199,9 +199,9 @@ export default function FilamentList({ filaments, onUpdate, onDelete }: Filament
           </table>
 
           {/* Mobile card view */}
-          <div className="md:hidden divide-y-2 divide-black">
+          <div className="md:hidden divide-y divide-black">
             {sortedFilaments.map((filament) => (
-              <div key={filament.id} className="bg-white p-4 space-y-3">
+              <div key={filament.id} className="bg-white px-2 py-3 sm:p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <div

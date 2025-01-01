@@ -81,9 +81,9 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-white p-8 font-mono">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col space-y-4">
+    <div className="min-h-screen bg-white sm:p-8 font-mono">
+      <div className="max-w-7xl w-full mx-auto">
+        <div className="flex flex-col space-y-0 sm:space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-black border-2 border-black p-4 space-y-4 sm:space-y-0">
             <div className="flex-1">
               <div className="flex flex-col sm:flex-row sm:items-baseline space-y-2 sm:space-y-0 sm:space-x-4">
