@@ -1,6 +1,5 @@
 BEGIN TRANSACTION;
 
--- Drop the diameter column if it exists
-ALTER TABLE filaments DROP COLUMN IF EXISTS diameter;
+ALTER TABLE filaments DROP COLUMN diameter;
 
 COMMIT;
