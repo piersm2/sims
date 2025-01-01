@@ -52,7 +52,7 @@ A modern web app to track your 3D printer filament inventory. It's built with Re
 
 3. Open your browser and navigate to:
    - Frontend: http://localhost:5173
-   - Backend API: http://localhost:3000
+   - Backend API: http://localhost:8175
 
 ## Database
 
