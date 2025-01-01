@@ -60,8 +60,13 @@ COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html
 # Copy nginx config
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
+# Copy database files
+COPY --from=backend-builder /app/database ./database
+
 # Create database directories
-RUN mkdir -p /app/db && mkdir -p /app/database/migrations
+RUN mkdir -p /app/db && mkdir -p /app/database/migrations && \
+    cp -r database/* /app/database/ && \
+    cp -r database/migrations/* /app/database/migrations/
 
 # Copy start script
 COPY start.sh ./

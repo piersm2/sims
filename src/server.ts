@@ -18,30 +18,39 @@ let db: Database;
 
 async function initializeDatabase() {
   try {
-    // Ensure database directory exists
     await fs.mkdir(dirname(DB_PATH), { recursive: true });
-
-    // Open database connection
+    
     db = await open({
       filename: DB_PATH,
       driver: sqlite3.Database
     });
 
-    // Check if database needs initialization
     const tableExists = await db.get(
       "SELECT name FROM sqlite_master WHERE type='table' AND name='filaments'"
     );
 
     if (!tableExists) {
-      try {
-        const schema = await fs.readFile(SCHEMA_PATH, 'utf8');
-        await db.exec(schema);
-      } catch (error) {
-        console.log('Schema file not found, running initial migration directly');
-        const initialSchema = await fs.readFile(join(MIGRATIONS_PATH, '001_initial_schema.sql'), 'utf8');
-        await db.exec(initialSchema);
-      }
-      console.log('Database initialized with schema');
+      // Embed initial schema as fallback
+      const initialSchema = `
+        CREATE TABLE IF NOT EXISTS schema_versions (
+            version INTEGER PRIMARY KEY,
+            applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        INSERT INTO schema_versions (version) VALUES (1);
+        CREATE TABLE IF NOT EXISTS filaments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            material TEXT NOT NULL,
+            color TEXT NOT NULL,
+            quantity INTEGER NOT NULL DEFAULT 1,
+            manufacturer TEXT,
+            notes TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+      `;
+      await db.exec(initialSchema);
+      console.log('Database initialized with embedded schema');
     }
 
     await runMigrations(db);
