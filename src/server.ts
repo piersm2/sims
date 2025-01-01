@@ -122,9 +122,10 @@ app.delete('/api/filaments/:id', async (req, res) => {
 // Initialize database and start server
 initializeDb().then(() => {
     app.listen(port, '0.0.0.0', () => {
-        console.log(`Server running at http://localhost:${port}`);
+        console.log(`Server is running on port ${port}`);
     });
 }).catch(error => {
     console.error('Failed to initialize database:', error);
-    process.exit(1);
-}); 
+});
+
+export default app; 

@@ -3,6 +3,8 @@ import FilamentList from './components/FilamentList'
 import FilamentForm from './components/FilamentForm'
 import { Filament } from './types/filament'
 
+const API_URL = import.meta.env.VITE_API_URL
+
 function App() {
   const [filaments, setFilaments] = useState<Filament[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -15,7 +17,7 @@ function App() {
 
   const fetchFilaments = async () => {
     try {
-      const response = await fetch('http://localhost:8175/api/filaments')
+      const response = await fetch(`${API_URL}/api/filaments`)
       if (!response.ok) throw new Error('Failed to fetch filaments')
       const data = await response.json()
       setFilaments(data)
@@ -29,7 +31,7 @@ function App() {
 
   const handleAddFilament = async (filament: Filament) => {
     try {
-      const response = await fetch('http://localhost:8175/api/filaments', {
+      const response = await fetch(`${API_URL}/api/filaments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(filament)
@@ -45,7 +47,7 @@ function App() {
 
   const handleUpdateFilament = async (filament: Filament) => {
     try {
-      const response = await fetch(`http://localhost:8175/api/filaments/${filament.id}`, {
+      const response = await fetch(`${API_URL}/api/filaments/${filament.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(filament)
@@ -60,7 +62,7 @@ function App() {
 
   const handleDeleteFilament = async (id: number) => {
     try {
-      const response = await fetch(`http://localhost:8175/api/filaments/${id}`, {
+      const response = await fetch(`${API_URL}/api/filaments/${id}`, {
         method: 'DELETE'
       })
       if (!response.ok) throw new Error('Failed to delete filament')
