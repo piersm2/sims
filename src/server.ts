@@ -17,6 +17,11 @@ const migrationFile = join(__dirname, 'db', 'migrations', 'remove_diameter.sql')
 let db: Database;
 
 async function setupMigrationDirectory() {
+    // In production, the files are already in the correct location
+    if (__dirname.includes('dist')) {
+        return;
+    }
+
     const srcMigrationsDir = join(__dirname, 'db', 'migrations');
     const distMigrationsDir = join(__dirname, '..', 'dist', 'db', 'migrations');
     

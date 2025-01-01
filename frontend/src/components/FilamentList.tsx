@@ -67,34 +67,36 @@ export default function FilamentList({ filaments, onUpdate, onDelete }: Filament
       )}
       <div className="border-2 border-black">
         <div className="border-b-2 border-black px-4 py-2 pr-2">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-baseline space-x-4">
-                <h1 className="text-lg font-medium text-black tracking-wider">FILAMENT INVENTORY RECORDS</h1>
-                <div className="flex text-xs space-x-2">
-                  <div className="flex">
-                    <div className="bg-black text-white px-2 py-1 font-bold">FILAMENTS</div>
-                    <div className="border border-black px-2 py-1 font-mono tracking-wider">
-                       {filaments.length.toString().padStart(3, '0')}
+          <div className="flex flex-col space-y-4">
+            <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+              <div className="flex-1">
+                <div className="flex flex-col space-y-4 sm:flex-row sm:items-baseline sm:space-y-0 sm:space-x-4">
+                  <h1 className="text-lg font-medium text-black tracking-wider">FILAMENT INVENTORY RECORDS</h1>
+                  <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2 text-xs">
+                    <div className="flex">
+                      <div className="bg-black text-white px-2 py-1 font-bold">FILAMENTS</div>
+                      <div className="border border-black px-2 py-1 font-mono tracking-wider">
+                        {filaments.length.toString().padStart(3, '0')}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex">
-                    <div className="bg-black text-white px-2 py-1 font-bold">INVENTORY</div>
-                    <div className="border border-black px-2 py-1 font-mono tracking-wider">
-                       {filaments.reduce((sum, f) => sum + f.quantity, 0).toString().padStart(3, '0')}
+                    <div className="flex">
+                      <div className="bg-black text-white px-2 py-1 font-bold">INVENTORY</div>
+                      <div className="border border-black px-2 py-1 font-mono tracking-wider">
+                        {filaments.reduce((sum, f) => sum + f.quantity, 0).toString().padStart(3, '0')}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div className="w-64">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="QUERY SIMS DATABASE"
-                className="block w-full bg-white border-2 border-black rounded-none px-3 py-2 text-black placeholder-gray-500 text-sm"
-              />
+              <div className="w-full sm:w-64">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="QUERY SIMS DATABASE"
+                  className="block w-full bg-white border-2 border-black rounded-none px-3 py-2 text-black placeholder-gray-500 text-sm"
+                />
+              </div>
             </div>
           </div>
         </div>
