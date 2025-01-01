@@ -4,7 +4,7 @@ services:
   backend:
     build: .
     ports:
-      - "8175:8175"
+      - "8176:8175"
     volumes:
       - ./db:/app/db
       - ./src:/app/src
@@ -15,7 +15,7 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "8174:8174"
+      - "8177:8174"
     volumes:
       - ./frontend/src:/app/src
     environment:
