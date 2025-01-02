@@ -18,7 +18,6 @@ services:
       - REPO_USER=${DOCKER_USER}
       - REPO_PASS=${DOCKER_PASSWORD}
       - WATCHTOWER_DEBUG=true
-      - WATCHTOWER_TRACE=true
     command: --interval 30 --cleanup --debug --trace
     restart: unless-stopped
 
