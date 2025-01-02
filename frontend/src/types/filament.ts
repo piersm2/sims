@@ -15,6 +15,7 @@ export type FilamentFormData = Omit<Filament, 'id' | 'created_at' | 'updated_at'
 
 export const MATERIAL_TYPES = [
     'ABS',
+    'ABS-GF',
     'ASA',
     'PAHT-CF',
     'PC',
