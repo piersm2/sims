@@ -112,8 +112,8 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
             >
               <div className="w-screen max-w-full sm:max-w-md">
                 <div className="h-full flex flex-col bg-white border-l-2 border-black overflow-y-scroll">
-                  <div className="flex-1 py-4 sm:py-6 overflow-y-auto px-4 sm:px-6">
-                    <div className="border-b-2 border-black pb-3">
+                  <div className="flex-1 py-2 sm:py-4 overflow-y-auto px-4 sm:px-6">
+                    <div className="border-b-2 border-black pb-2">
                       <Dialog.Title className="text-lg font-medium text-black tracking-wider pr-8">
                         {filament ? 'MODIFY EXISTING FILAMENT' : 'CREATE NEW FILAMENT'}
                       </Dialog.Title>
@@ -130,17 +130,17 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
                       </button>
                     </div>
 
-                    <form onSubmit={handleSubmit(onSubmitForm)} className="mt-6 sm:mt-8">
-                      <div className="space-y-5 sm:space-y-6">
+                    <form onSubmit={handleSubmit(onSubmitForm)} className="mt-4 sm:mt-6">
+                      <div className="space-y-3 sm:space-y-4">
                         <div>
-                          <label className="block text-xs font-medium text-black uppercase tracking-wider mb-2">
+                          <label className="block text-xs font-medium text-black uppercase tracking-wider mb-1">
                             {'>>'} Filament Name
                           </label>
                           <input
                             type="text"
                             autoComplete="off"
                             {...register('name', { required: 'Record name is required' })}
-                            className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-3 text-black placeholder-gray-500 text-base"
+                            className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-2 text-black placeholder-gray-500 text-base"
                           />
                           {errors.name && (
                             <p className="mt-2 text-xs text-red-600">! {errors.name.message}</p>
@@ -148,12 +148,12 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
                         </div>
 
                         <div>
-                          <label className="block text-xs font-medium text-black uppercase tracking-wider mb-2">
+                          <label className="block text-xs font-medium text-black uppercase tracking-wider mb-1">
                             {'>>'} Material Classification
                           </label>
                           <select
                             {...register('material', { required: 'Material classification is required' })}
-                            className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-3 text-black text-base appearance-none"
+                            className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-2 text-black text-base appearance-none"
                           >
                             {MATERIAL_TYPES.map((material) => (
                               <option key={material} value={material}>
@@ -164,7 +164,7 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
                         </div>
 
                         <div>
-                          <label className="block text-xs font-medium text-black uppercase tracking-wider mb-2">
+                          <label className="block text-xs font-medium text-black uppercase tracking-wider mb-1">
                             {'>>'} Color Reference
                           </label>
                           <div className="flex items-center space-x-3">
@@ -177,13 +177,13 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
                             <input
                               type="text"
                               {...register('color')}
-                              className="flex-1 block bg-white border border-black rounded-none px-3 py-3 text-black text-base uppercase"
+                              className="flex-1 block bg-white border border-black rounded-none px-3 py-2 text-black text-base uppercase"
                             />
                           </div>
                         </div>
 
                         <div>
-                          <label className="block text-xs font-medium text-black uppercase tracking-wider mb-2">
+                          <label className="block text-xs font-medium text-black uppercase tracking-wider mb-1">
                             {'>>'} Inventory Count
                           </label>
                           <input
@@ -192,7 +192,7 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
                               required: 'Inventory count is required',
                               min: { value: 0, message: 'Count must be positive' }
                             })}
-                            className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-3 text-black text-base"
+                            className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-2 text-black text-base"
                           />
                           {errors.quantity && (
                             <p className="mt-2 text-xs text-red-600">! {errors.quantity.message}</p>
@@ -200,7 +200,7 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
                         </div>
 
                         <div>
-                          <label className="block text-xs font-medium text-black uppercase tracking-wider mb-2">
+                          <label className="block text-xs font-medium text-black uppercase tracking-wider mb-1">
                             {'>>'} Minimum Quantity
                           </label>
                           <input
@@ -209,7 +209,7 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
                               required: 'Minimum quantity is required',
                               min: { value: 0, message: 'Minimum quantity must be positive' }
                             })}
-                            className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-3 text-black text-base"
+                            className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-2 text-black text-base"
                           />
                           {errors.minimum_quantity && (
                             <p className="mt-2 text-xs text-red-600">! {errors.minimum_quantity.message}</p>
@@ -217,7 +217,7 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
                         </div>
 
                         <div>
-                          <label className="block text-xs font-medium text-black uppercase tracking-wider mb-2">
+                          <label className="block text-xs font-medium text-black uppercase tracking-wider mb-1">
                             {'>>'} Manufacturer Data
                           </label>
                           <div className="relative">
@@ -228,7 +228,7 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
                               onBlur={() => {
                                 setTimeout(() => setShowSuggestions(false), 200)
                               }}
-                              className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-3 text-black placeholder-gray-500 text-base"
+                              className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-2 text-black placeholder-gray-500 text-base"
                             />
                             {showSuggestions && filteredManufacturers.length > 0 && (
                               <div className="absolute z-10 w-full mt-1 bg-white border-2 border-black shadow-lg max-h-60 overflow-auto">
@@ -248,7 +248,7 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
 
                         {filament && AdditionalParametersField}
 
-                        <div className="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-6 mt-6 border-t-2 border-black">
+                        <div className="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-4 mt-4 border-t-2 border-black">
                           <button
                             type="submit"
                             className="w-full px-6 py-3 border-2 border-black rounded-none text-sm font-medium text-white bg-black hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-colors uppercase tracking-wider"
