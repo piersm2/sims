@@ -48,3 +48,7 @@ sims.error.log
 
 # Make sure we don't exclude SQL files
 !*.sql
+
+# Add to .gitignore
+backups/*
+!backups/.gitkeep

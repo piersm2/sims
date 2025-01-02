@@ -22,6 +22,18 @@ services:
     command: --interval 30 --cleanup --debug --trace
     restart: unless-stopped
 
+  backup:
+    image: offen/docker-volume-backup:v2
+    environment:
+      BACKUP_CRON_EXPRESSION: "0 4 * * *"    # Runs at 4 AM daily
+      BACKUP_RETENTION_DAYS: "7"             # Keep backups for 7 days
+      BACKUP_FILENAME: "sims-backup-%Y-%m-%d"
+    volumes:
+      - db-data:/backup/sims-db:ro           # Mount the database volume
+      - ./backups:/archive                   # Local folder to store backups
+    depends_on:
+      - app
+
 volumes:
   db-data:
     name: sims-db-data 
