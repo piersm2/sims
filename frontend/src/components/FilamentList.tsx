@@ -89,13 +89,24 @@ export default function FilamentList({ filaments, onUpdate, onDelete }: Filament
                 </div>
               </div>
               <div className="w-full sm:w-64">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="QUERY SIMS DATABASE"
-                  className="block w-full bg-white border-2 border-black rounded-none px-3 py-2 text-black placeholder-gray-500 text-sm"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="QUERY SIMS DATABASE"
+                    className="block w-full bg-white border-2 border-black rounded-none px-3 py-2 text-black placeholder-gray-500 text-sm pr-8"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black transition-colors"
+                      aria-label="Clear search"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
