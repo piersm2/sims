@@ -140,7 +140,10 @@ export default function FilamentList({ filaments, onUpdate, onDelete }: Filament
             </thead>
             <tbody className="bg-white divide-y-2 divide-black">
               {sortedFilaments.map((filament) => (
-                <tr key={filament.id} className="hover:bg-gray-50">
+                <tr 
+                  key={filament.id} 
+                  className={`hover:bg-gray-50 ${filament.quantity <= filament.minimum_quantity ? 'bg-red-100' : ''}`}
+                >
                   <td className="px-3 py-2 text-sm font-medium text-black border-r-2 border-black">
                     <div className="flex items-center">
                       <div
@@ -201,7 +204,10 @@ export default function FilamentList({ filaments, onUpdate, onDelete }: Filament
           {/* Mobile card view */}
           <div className="md:hidden divide-y divide-black">
             {sortedFilaments.map((filament) => (
-              <div key={filament.id} className="bg-white px-2 py-3 sm:p-4 space-y-3">
+              <div 
+                key={filament.id} 
+                className={`bg-white px-2 py-3 sm:p-4 space-y-3 ${filament.quantity <= filament.minimum_quantity ? 'bg-red-100' : ''}`}
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <div

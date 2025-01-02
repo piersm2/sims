@@ -4,6 +4,7 @@ export interface Filament {
     material: string;
     color: string;
     quantity: number;
+    minimum_quantity: number;
     manufacturer?: string;
     notes?: string;
     created_at?: string;

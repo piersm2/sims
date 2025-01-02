@@ -1,1 +1,1 @@
-- Don't output Docker commands unless explicitly asked to.
+- Don't output or run Docker commands unless explicitly asked to.

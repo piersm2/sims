@@ -18,6 +18,7 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
       material: 'PLA',
       color: '#000000',
       quantity: 1,
+      minimum_quantity: 0,
       manufacturer: '',
       notes: ''
     }
@@ -195,6 +196,23 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
                           />
                           {errors.quantity && (
                             <p className="mt-2 text-xs text-red-600">! {errors.quantity.message}</p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-black uppercase tracking-wider mb-2">
+                            {'>>'} Minimum Quantity
+                          </label>
+                          <input
+                            type="number"
+                            {...register('minimum_quantity', {
+                              required: 'Minimum quantity is required',
+                              min: { value: 0, message: 'Minimum quantity must be positive' }
+                            })}
+                            className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-3 text-black text-base"
+                          />
+                          {errors.minimum_quantity && (
+                            <p className="mt-2 text-xs text-red-600">! {errors.minimum_quantity.message}</p>
                           )}
                         </div>
 
