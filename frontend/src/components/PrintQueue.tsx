@@ -74,7 +74,7 @@ export default function PrintQueue({ items, printers, filaments, onAdd, onUpdate
         setColorSearch('');
     };
 
-    const handlePrinterAdded = (printer: Printer) => {
+    const handlePrinterAdded = () => {
         setShowPrinterForm(false);
     };
 

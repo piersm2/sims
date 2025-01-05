@@ -132,29 +132,13 @@ function App() {
 
   const handleDeleteQueueItem = async (id: number) => {
     try {
-      const response = await fetch(`${API_URL}/api/print-queue/${id}`, {
+      await fetch(`${API_URL}/api/queue/${id}`, {
         method: 'DELETE'
       })
-      if (!response.ok) throw new Error('Failed to delete queue item')
       await fetchPrintQueue()
       setError(null)
     } catch (err) {
       setError('Failed to delete queue item')
-    }
-  }
-
-  const handleAddPrinter = async (printer: Printer) => {
-    try {
-      const response = await fetch(`${API_URL}/api/printers`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(printer)
-      })
-      if (!response.ok) throw new Error('Failed to add printer')
-      await fetchPrinters()
-      setError(null)
-    } catch (err) {
-      setError('Failed to add printer')
     }
   }
 
