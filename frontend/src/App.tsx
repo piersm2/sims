@@ -1,17 +1,25 @@
 import { useState, useEffect } from 'react'
 import FilamentList from './components/FilamentList'
 import FilamentForm from './components/FilamentForm'
+import PrintQueue from './components/PrintQueue'
 import { Filament } from './types/filament'
+import { PrintQueueItem, Printer } from './types/printer'
 import { API_URL } from './config'
 
 function App() {
   const [filaments, setFilaments] = useState<Filament[]>([])
+  const [printers, setPrinters] = useState<Printer[]>([])
+  const [queueItems, setQueueItems] = useState<PrintQueueItem[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isAddingFilament, setIsAddingFilament] = useState(false)
 
   useEffect(() => {
-    fetchFilaments()
+    Promise.all([
+      fetchFilaments(),
+      fetchPrinters(),
+      fetchPrintQueue()
+    ]).finally(() => setIsLoading(false))
   }, [])
 
   const fetchFilaments = async () => {
@@ -23,8 +31,28 @@ function App() {
       setError(null)
     } catch (err) {
       setError('Failed to load filaments')
-    } finally {
-      setIsLoading(false)
+    }
+  }
+
+  const fetchPrinters = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/printers`)
+      if (!response.ok) throw new Error('Failed to fetch printers')
+      const data = await response.json()
+      setPrinters(data)
+    } catch (err) {
+      setError('Failed to load printers')
+    }
+  }
+
+  const fetchPrintQueue = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/print-queue`)
+      if (!response.ok) throw new Error('Failed to fetch print queue')
+      const data = await response.json()
+      setQueueItems(data)
+    } catch (err) {
+      setError('Failed to load print queue')
     }
   }
 
@@ -72,6 +100,64 @@ function App() {
     }
   }
 
+  const handleAddQueueItem = async (item: PrintQueueItem) => {
+    try {
+      const response = await fetch(`${API_URL}/api/print-queue`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item)
+      })
+      if (!response.ok) throw new Error('Failed to add queue item')
+      await fetchPrintQueue()
+      setError(null)
+    } catch (err) {
+      setError('Failed to add queue item')
+    }
+  }
+
+  const handleUpdateQueueItem = async (item: PrintQueueItem) => {
+    try {
+      const response = await fetch(`${API_URL}/api/print-queue/${item.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item)
+      })
+      if (!response.ok) throw new Error('Failed to update queue item')
+      await fetchPrintQueue()
+      setError(null)
+    } catch (err) {
+      setError('Failed to update queue item')
+    }
+  }
+
+  const handleDeleteQueueItem = async (id: number) => {
+    try {
+      const response = await fetch(`${API_URL}/api/print-queue/${id}`, {
+        method: 'DELETE'
+      })
+      if (!response.ok) throw new Error('Failed to delete queue item')
+      await fetchPrintQueue()
+      setError(null)
+    } catch (err) {
+      setError('Failed to delete queue item')
+    }
+  }
+
+  const handleAddPrinter = async (printer: Printer) => {
+    try {
+      const response = await fetch(`${API_URL}/api/printers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(printer)
+      })
+      if (!response.ok) throw new Error('Failed to add printer')
+      await fetchPrinters()
+      setError(null)
+    } catch (err) {
+      setError('Failed to add printer')
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white p-8 font-mono">
@@ -82,7 +168,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-white sm:p-8 font-mono">
-      <div className="max-w-7xl w-full mx-auto">
+      <div className="w-full">
         <div className="flex flex-col space-y-0 sm:space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-black border-2 border-black p-4 space-y-4 sm:space-y-0">
             <div className="flex-1">
@@ -106,11 +192,24 @@ function App() {
             </div>
           )}
 
-          <FilamentList
-            filaments={filaments}
-            onUpdate={handleUpdateFilament}
-            onDelete={handleDeleteFilament}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+            <div className="lg:col-span-3">
+              <FilamentList
+                filaments={filaments}
+                onUpdate={handleUpdateFilament}
+                onDelete={handleDeleteFilament}
+              />
+            </div>
+            <div>
+              <PrintQueue
+                items={queueItems}
+                printers={printers}
+                onAdd={handleAddQueueItem}
+                onUpdate={handleUpdateQueueItem}
+                onDelete={handleDeleteQueueItem}
+              />
+            </div>
+          </div>
 
           {isAddingFilament && (
             <FilamentForm

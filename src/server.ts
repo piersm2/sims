@@ -201,4 +201,159 @@ app.delete('/api/filaments/:id', async (req, res) => {
     }
 });
 
+// Printer Routes
+app.get('/api/printers', async (req, res) => {
+    try {
+        const printers = await db.all('SELECT * FROM printers ORDER BY name');
+        res.json(printers);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch printers' });
+    }
+});
+
+app.post('/api/printers', async (req, res) => {
+    try {
+        const { name } = req.body;
+        const result = await db.run(
+            'INSERT INTO printers (name) VALUES (?)',
+            [name]
+        );
+        const newPrinter = await db.get('SELECT * FROM printers WHERE id = ?', result.lastID);
+        res.status(201).json(newPrinter);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to create printer' });
+    }
+});
+
+app.put('/api/printers/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name } = req.body;
+        await db.run(
+            'UPDATE printers SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [name, id]
+        );
+        const updatedPrinter = await db.get('SELECT * FROM printers WHERE id = ?', id);
+        if (!updatedPrinter) {
+            return res.status(404).json({ error: 'Printer not found' });
+        }
+        res.json(updatedPrinter);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update printer' });
+    }
+});
+
+app.delete('/api/printers/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.run('DELETE FROM printers WHERE id = ?', id);
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete printer' });
+    }
+});
+
+// Print Queue Routes
+app.get('/api/print-queue', async (req, res) => {
+    try {
+        const items = await db.all(`
+            SELECT q.*, p.name as printer_name 
+            FROM print_queue q 
+            LEFT JOIN printers p ON q.printer_id = p.id 
+            ORDER BY q.created_at DESC
+        `);
+        
+        // Transform the results to match the frontend type
+        const formattedItems = items.map(item => ({
+            ...item,
+            printer: item.printer_name ? {
+                id: item.printer_id,
+                name: item.printer_name
+            } : undefined
+        }));
+        
+        res.json(formattedItems);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch print queue' });
+    }
+});
+
+app.post('/api/print-queue', async (req, res) => {
+    try {
+        const { item_name, printer_id, status = 'pending' } = req.body;
+        const result = await db.run(
+            'INSERT INTO print_queue (item_name, printer_id, status) VALUES (?, ?, ?)',
+            [item_name, printer_id, status]
+        );
+        
+        const newItem = await db.get(`
+            SELECT q.*, p.name as printer_name 
+            FROM print_queue q 
+            LEFT JOIN printers p ON q.printer_id = p.id 
+            WHERE q.id = ?
+        `, result.lastID);
+        
+        // Transform to match frontend type
+        const formattedItem = {
+            ...newItem,
+            printer: newItem.printer_name ? {
+                id: newItem.printer_id,
+                name: newItem.printer_name
+            } : undefined
+        };
+        
+        res.status(201).json(formattedItem);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to create print queue item' });
+    }
+});
+
+app.put('/api/print-queue/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { item_name, printer_id, status } = req.body;
+        
+        await db.run(
+            `UPDATE print_queue 
+             SET item_name = ?, printer_id = ?, status = ?, updated_at = CURRENT_TIMESTAMP 
+             WHERE id = ?`,
+            [item_name, printer_id, status, id]
+        );
+        
+        const updatedItem = await db.get(`
+            SELECT q.*, p.name as printer_name 
+            FROM print_queue q 
+            LEFT JOIN printers p ON q.printer_id = p.id 
+            WHERE q.id = ?
+        `, id);
+        
+        if (!updatedItem) {
+            return res.status(404).json({ error: 'Print queue item not found' });
+        }
+        
+        // Transform to match frontend type
+        const formattedItem = {
+            ...updatedItem,
+            printer: updatedItem.printer_name ? {
+                id: updatedItem.printer_id,
+                name: updatedItem.printer_name
+            } : undefined
+        };
+        
+        res.json(formattedItem);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update print queue item' });
+    }
+});
+
+app.delete('/api/print-queue/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.run('DELETE FROM print_queue WHERE id = ?', id);
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete print queue item' });
+    }
+});
+
 export default app; 
