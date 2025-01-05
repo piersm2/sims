@@ -280,10 +280,10 @@ app.get('/api/print-queue', async (req, res) => {
 
 app.post('/api/print-queue', async (req, res) => {
     try {
-        const { item_name, printer_id, status = 'pending' } = req.body;
+        const { item_name, printer_id, color, status = 'pending' } = req.body;
         const result = await db.run(
-            'INSERT INTO print_queue (item_name, printer_id, status) VALUES (?, ?, ?)',
-            [item_name, printer_id, status]
+            'INSERT INTO print_queue (item_name, printer_id, color, status) VALUES (?, ?, ?, ?)',
+            [item_name, printer_id, color, status]
         );
         
         const newItem = await db.get(`
@@ -311,13 +311,13 @@ app.post('/api/print-queue', async (req, res) => {
 app.put('/api/print-queue/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { item_name, printer_id, status } = req.body;
+        const { item_name, printer_id, color, status } = req.body;
         
         await db.run(
             `UPDATE print_queue 
-             SET item_name = ?, printer_id = ?, status = ?, updated_at = CURRENT_TIMESTAMP 
+             SET item_name = ?, printer_id = ?, color = ?, status = ?, updated_at = CURRENT_TIMESTAMP 
              WHERE id = ?`,
-            [item_name, printer_id, status, id]
+            [item_name, printer_id, color, status, id]
         );
         
         const updatedItem = await db.get(`

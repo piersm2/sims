@@ -9,6 +9,7 @@ export interface PrintQueueItem {
     id?: number;
     item_name: string;
     printer_id?: number;
+    color?: string;
     status: 'pending' | 'in_progress' | 'completed';
     created_at?: string;
     updated_at?: string;
