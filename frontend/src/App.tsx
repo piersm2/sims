@@ -132,7 +132,7 @@ function App() {
 
   const handleDeleteQueueItem = async (id: number) => {
     try {
-      await fetch(`${API_URL}/api/queue/${id}`, {
+      await fetch(`${API_URL}/api/print-queue/${id}`, {
         method: 'DELETE'
       })
       await fetchPrintQueue()
