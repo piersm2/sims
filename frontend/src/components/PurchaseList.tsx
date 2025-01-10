@@ -13,7 +13,6 @@ interface PurchaseListProps {
 export default function PurchaseList({ items, filaments, onAdd, onUpdate, onDelete }: PurchaseListProps) {
     const [isFilamentDropdownOpen, setIsFilamentDropdownOpen] = useState(false);
     const [filamentSearch, setFilamentSearch] = useState('');
-    const [selectedFilament, setSelectedFilament] = useState<Filament | null>(null);
     const filamentDropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -33,7 +32,6 @@ export default function PurchaseList({ items, filaments, onAdd, onUpdate, onDele
     );
 
     const handleFilamentSelect = (filament: Filament) => {
-        setSelectedFilament(filament);
         setIsFilamentDropdownOpen(false);
         onAdd({ filament_id: filament.id!, quantity: 1 });
         setFilamentSearch('');
