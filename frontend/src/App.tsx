@@ -2,14 +2,17 @@ import { useState, useEffect } from 'react'
 import FilamentList from './components/FilamentList'
 import FilamentForm from './components/FilamentForm'
 import PrintQueue from './components/PrintQueue'
+import PurchaseList from './components/PurchaseList'
 import { Filament } from './types/filament'
 import { PrintQueueItem, Printer } from './types/printer'
+import { PurchaseListItem } from './types/purchase'
 import { API_URL } from './config'
 
 function App() {
   const [filaments, setFilaments] = useState<Filament[]>([])
   const [printers, setPrinters] = useState<Printer[]>([])
   const [queueItems, setQueueItems] = useState<PrintQueueItem[]>([])
+  const [purchaseItems, setPurchaseItems] = useState<PurchaseListItem[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isAddingFilament, setIsAddingFilament] = useState(false)
@@ -18,7 +21,8 @@ function App() {
     Promise.all([
       fetchFilaments(),
       fetchPrinters(),
-      fetchPrintQueue()
+      fetchPrintQueue(),
+      fetchPurchaseItems()
     ]).finally(() => setIsLoading(false))
   }, [])
 
@@ -28,7 +32,6 @@ function App() {
       if (!response.ok) throw new Error('Failed to fetch filaments')
       const data = await response.json()
       setFilaments(data)
-      setError(null)
     } catch (err) {
       setError('Failed to load filaments')
     }
@@ -53,6 +56,17 @@ function App() {
       setQueueItems(data)
     } catch (err) {
       setError('Failed to load print queue')
+    }
+  }
+
+  const fetchPurchaseItems = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/purchase-list`)
+      if (!response.ok) throw new Error('Failed to fetch purchase items')
+      const data = await response.json()
+      setPurchaseItems(data)
+    } catch (err) {
+      setError('Failed to load purchase list')
     }
   }
 
@@ -142,6 +156,49 @@ function App() {
     }
   }
 
+  const handleAddPurchaseItem = async (item: PurchaseListItem) => {
+    try {
+      const response = await fetch(`${API_URL}/api/purchase-list`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item)
+      })
+      if (!response.ok) throw new Error('Failed to add purchase item')
+      await fetchPurchaseItems()
+      setError(null)
+    } catch (err) {
+      setError('Failed to add purchase item')
+    }
+  }
+
+  const handleUpdatePurchaseItem = async (item: PurchaseListItem) => {
+    try {
+      const response = await fetch(`${API_URL}/api/purchase-list/${item.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item)
+      })
+      if (!response.ok) throw new Error('Failed to update purchase item')
+      await fetchPurchaseItems()
+      setError(null)
+    } catch (err) {
+      setError('Failed to update purchase item')
+    }
+  }
+
+  const handleDeletePurchaseItem = async (id: number) => {
+    try {
+      const response = await fetch(`${API_URL}/api/purchase-list/${id}`, {
+        method: 'DELETE'
+      })
+      if (!response.ok) throw new Error('Failed to delete purchase item')
+      await fetchPurchaseItems()
+      setError(null)
+    } catch (err) {
+      setError('Failed to delete purchase item')
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white p-8 font-mono">
@@ -193,6 +250,15 @@ function App() {
                 onUpdate={handleUpdateQueueItem}
                 onDelete={handleDeleteQueueItem}
               />
+              <div className="mt-4">
+                <PurchaseList
+                  items={purchaseItems}
+                  filaments={filaments}
+                  onAdd={handleAddPurchaseItem}
+                  onUpdate={handleUpdatePurchaseItem}
+                  onDelete={handleDeletePurchaseItem}
+                />
+              </div>
             </div>
           </div>
 

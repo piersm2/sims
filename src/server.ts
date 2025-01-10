@@ -356,4 +356,72 @@ app.delete('/api/print-queue/:id', async (req, res) => {
     }
 });
 
+// Purchase List Routes
+app.get('/api/purchase-list', async (req, res) => {
+  try {
+    const items = await db.all(`
+      SELECT pl.*, f.name, f.material, f.color, f.manufacturer
+      FROM purchase_list pl
+      JOIN filaments f ON pl.filament_id = f.id
+      ORDER BY pl.created_at DESC
+    `)
+    res.json(items)
+  } catch (error) {
+    console.error('Error fetching purchase list:', error)
+    res.status(500).json({ error: 'Failed to fetch purchase list' })
+  }
+})
+
+app.post('/api/purchase-list', async (req, res) => {
+  const { filament_id, quantity } = req.body
+  try {
+    const result = await db.run(
+      'INSERT INTO purchase_list (filament_id, quantity) VALUES (?, ?)',
+      [filament_id, quantity]
+    )
+    const item = await db.get(`
+      SELECT pl.*, f.name, f.material, f.color, f.manufacturer
+      FROM purchase_list pl
+      JOIN filaments f ON pl.filament_id = f.id
+      WHERE pl.id = ?
+    `, result.lastID)
+    res.status(201).json(item)
+  } catch (error) {
+    console.error('Error adding purchase list item:', error)
+    res.status(500).json({ error: 'Failed to add purchase list item' })
+  }
+})
+
+app.put('/api/purchase-list/:id', async (req, res) => {
+  const { id } = req.params
+  const { quantity } = req.body
+  try {
+    await db.run(
+      'UPDATE purchase_list SET quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [quantity, id]
+    )
+    const item = await db.get(`
+      SELECT pl.*, f.name, f.material, f.color, f.manufacturer
+      FROM purchase_list pl
+      JOIN filaments f ON pl.filament_id = f.id
+      WHERE pl.id = ?
+    `, id)
+    res.json(item)
+  } catch (error) {
+    console.error('Error updating purchase list item:', error)
+    res.status(500).json({ error: 'Failed to update purchase list item' })
+  }
+})
+
+app.delete('/api/purchase-list/:id', async (req, res) => {
+  const { id } = req.params
+  try {
+    await db.run('DELETE FROM purchase_list WHERE id = ?', id)
+    res.status(204).send()
+  } catch (error) {
+    console.error('Error deleting purchase list item:', error)
+    res.status(500).json({ error: 'Failed to delete purchase list item' })
+  }
+})
+
 export default app; 
