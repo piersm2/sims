@@ -141,17 +141,20 @@ app.post('/api/filaments', async (req, res) => {
             name,
             material,
             color,
+            color2,
+            color3,
             quantity,
+            minimum_quantity,
             manufacturer,
             notes
         } = req.body;
 
         const result = await db.run(
             `INSERT INTO filaments (
-                name, material, color, quantity,
-                manufacturer, notes
-            ) VALUES (?, ?, ?, ?, ?, ?)`,
-            [name, material, color, quantity, manufacturer, notes]
+                name, material, color, color2, color3, quantity,
+                minimum_quantity, manufacturer, notes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [name, material, color, color2, color3, quantity, minimum_quantity, manufacturer, notes]
         );
 
         const newFilament = await db.get('SELECT * FROM filaments WHERE id = ?', result.lastID);

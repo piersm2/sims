@@ -17,6 +17,8 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
       name: '',
       material: 'PLA',
       color: '#000000',
+      color2: '',
+      color3: '',
       quantity: 1,
       minimum_quantity: 0,
       manufacturer: '',
@@ -167,17 +169,84 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
                           <label className="block text-xs font-medium text-black uppercase tracking-wider mb-1">
                             {'>>'} Color Reference
                           </label>
-                          <div className="flex items-center space-x-3">
-                            <input
-                              type="color"
-                              {...register('color', { required: 'Color reference is required' })}
-                              onChange={(e) => setValue('color', e.target.value.toUpperCase())}
-                              className="block w-16 h-16 bg-white border border-black rounded-none p-1 text-black"
-                            />
-                            <input
-                              type="text"
-                              {...register('color')}
-                              className="flex-1 block bg-white border border-black rounded-none px-3 py-2 text-black text-base uppercase"
+                          <div className="space-y-3">
+                            <div className="flex items-center space-x-3">
+                              <input
+                                type="color"
+                                {...register('color', { required: 'Primary color is required' })}
+                                onChange={(e) => setValue('color', e.target.value.toUpperCase())}
+                                className="block w-16 h-16 bg-white border border-black rounded-none p-1 text-black"
+                              />
+                              <input
+                                type="text"
+                                {...register('color')}
+                                className="flex-1 block bg-white border border-black rounded-none px-3 py-2 text-black text-base uppercase"
+                                placeholder="Primary Color"
+                              />
+                            </div>
+                            
+                            <div className="flex items-center space-x-3">
+                              <input
+                                type="color"
+                                {...register('color2')}
+                                onChange={(e) => setValue('color2', e.target.value.toUpperCase())}
+                                className="block w-16 h-16 bg-white border border-black rounded-none p-1 text-black"
+                              />
+                              <input
+                                type="text"
+                                {...register('color2')}
+                                className="flex-1 block bg-white border border-black rounded-none px-3 py-2 text-black text-base uppercase"
+                                placeholder="Secondary Color (Optional)"
+                              />
+                              {watch('color2') && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setValue('color2', '')
+                                    setValue('color3', '')
+                                  }}
+                                  className="px-2 py-1 border border-black hover:bg-black hover:text-white text-sm"
+                                >
+                                  Clear
+                                </button>
+                              )}
+                            </div>
+
+                            {watch('color2') && (
+                              <div className="flex items-center space-x-3">
+                                <input
+                                  type="color"
+                                  {...register('color3')}
+                                  onChange={(e) => setValue('color3', e.target.value.toUpperCase())}
+                                  className="block w-16 h-16 bg-white border border-black rounded-none p-1 text-black"
+                                />
+                                <input
+                                  type="text"
+                                  {...register('color3')}
+                                  className="flex-1 block bg-white border border-black rounded-none px-3 py-2 text-black text-base uppercase"
+                                  placeholder="Tertiary Color (Optional)"
+                                />
+                                {watch('color3') && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setValue('color3', '')}
+                                    className="px-2 py-1 border border-black hover:bg-black hover:text-white text-sm"
+                                  >
+                                    Clear
+                                  </button>
+                                )}
+                              </div>
+                            )}
+
+                            <div 
+                              className="w-full h-8 border border-black"
+                              style={{ 
+                                background: watch('color3') 
+                                  ? `linear-gradient(to right, ${watch('color')}, ${watch('color2')}, ${watch('color3')})`
+                                  : watch('color2')
+                                    ? `linear-gradient(to right, ${watch('color')}, ${watch('color2')})`
+                                    : watch('color')
+                              }}
                             />
                           </div>
                         </div>

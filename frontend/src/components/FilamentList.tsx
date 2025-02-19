@@ -11,9 +11,40 @@ interface FilamentListProps {
   onDelete: (id: number) => void
 }
 
+// Convert hex to RGB
+function hexToRgb(hex: string) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+}
+
+// Calculate color similarity (0-100)
+function getColorSimilarity(color1: string, color2: string): number {
+  const rgb1 = hexToRgb(color1);
+  const rgb2 = hexToRgb(color2);
+  
+  if (!rgb1 || !rgb2) return 0;
+
+  // Calculate Euclidean distance in RGB space
+  const distance = Math.sqrt(
+    Math.pow(rgb1.r - rgb2.r, 2) +
+    Math.pow(rgb1.g - rgb2.g, 2) +
+    Math.pow(rgb1.b - rgb2.b, 2)
+  );
+
+  // Convert distance to similarity percentage (max distance in RGB space is ~442)
+  const similarity = Math.max(0, 100 - (distance / 442) * 100);
+  return similarity;
+}
+
 export default function FilamentList({ filaments, onUpdate, onDelete }: FilamentListProps) {
   const [editingFilament, setEditingFilament] = useState<Filament | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchColor, setSearchColor] = useState('')
+  const [colorThreshold, setColorThreshold] = useState(85) // Default 85% similarity
   const [sortField, setSortField] = useState<SortField>('name')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
 
@@ -36,11 +67,32 @@ export default function FilamentList({ filaments, onUpdate, onDelete }: Filament
   }
 
   const sortedFilaments = [...filaments]
-    .filter(filament => 
-      filament.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      filament.material.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      filament.manufacturer?.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    .filter(filament => {
+      const textMatch = 
+        filament.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        filament.material.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        filament.manufacturer?.toLowerCase().includes(searchQuery.toLowerCase());
+
+      if (!searchColor) return textMatch;
+
+      // Check primary color similarity
+      const primarySimilarity = getColorSimilarity(searchColor, filament.color);
+      if (primarySimilarity >= colorThreshold) return true;
+
+      // Check secondary color similarity if exists
+      if (filament.color2) {
+        const secondarySimilarity = getColorSimilarity(searchColor, filament.color2);
+        if (secondarySimilarity >= colorThreshold) return true;
+      }
+
+      // Check tertiary color similarity if exists
+      if (filament.color3) {
+        const tertiarySimilarity = getColorSimilarity(searchColor, filament.color3);
+        if (tertiarySimilarity >= colorThreshold) return true;
+      }
+
+      return false;
+    })
     .sort((a, b) => {
       const aValue = a[sortField]
       const bValue = b[sortField]
@@ -88,24 +140,56 @@ export default function FilamentList({ filaments, onUpdate, onDelete }: Filament
                   </div>
                 </div>
               </div>
-              <div className="w-full sm:w-64">
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="QUERY SIMS DATABASE"
-                    className="block w-full bg-white border-2 border-black rounded-none px-3 py-2 text-black placeholder-gray-500 text-sm pr-8"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black transition-colors"
-                      aria-label="Clear search"
-                    >
-                      ×
-                    </button>
-                  )}
+              <div className="w-full sm:w-auto">
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="QUERY SIMS DATABASE"
+                      className="block w-full bg-white border-2 border-black rounded-none px-3 py-2 text-black placeholder-gray-500 text-sm pr-8"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black transition-colors"
+                        aria-label="Clear search"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="color"
+                      value={searchColor}
+                      onChange={(e) => setSearchColor(e.target.value)}
+                      className="block w-8 h-8 bg-white border border-black rounded-none p-0 cursor-pointer [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-none [&::-moz-color-swatch]:border-none"
+                      title="Search by color"
+                    />
+                    {searchColor && (
+                      <>
+                        <input
+                          type="range"
+                          min="50"
+                          max="100"
+                          value={colorThreshold}
+                          onChange={(e) => setColorThreshold(Number(e.target.value))}
+                          className="w-24"
+                          title="Color similarity threshold"
+                        />
+                        <span className="text-xs font-mono">{colorThreshold}%</span>
+                        <button
+                          onClick={() => setSearchColor('')}
+                          className="px-2 py-1 border border-black hover:bg-black hover:text-white text-sm"
+                          title="Clear color search"
+                        >
+                          Clear
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -158,8 +242,14 @@ export default function FilamentList({ filaments, onUpdate, onDelete }: Filament
                   <td className="px-3 py-2 text-sm font-medium text-black border-r-2 border-black">
                     <div className="flex items-center">
                       <div
-                        className="h-4 w-4 border border-black mr-2 flex-shrink-0"
-                        style={{ backgroundColor: filament.color }}
+                        className="h-6 w-6 border border-black mr-2 flex-shrink-0"
+                        style={{ 
+                          background: filament.color3 
+                            ? `linear-gradient(to right, ${filament.color}, ${filament.color2 || filament.color}, ${filament.color3})`
+                            : filament.color2
+                              ? `linear-gradient(to right, ${filament.color}, ${filament.color2})`
+                              : filament.color
+                        }}
                       />
                       {filament.name}
                     </div>
@@ -222,8 +312,14 @@ export default function FilamentList({ filaments, onUpdate, onDelete }: Filament
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <div
-                      className="h-4 w-4 border border-black flex-shrink-0"
-                      style={{ backgroundColor: filament.color }}
+                      className="h-6 w-6 border border-black flex-shrink-0"
+                      style={{ 
+                        background: filament.color3 
+                          ? `linear-gradient(to right, ${filament.color}, ${filament.color2 || filament.color}, ${filament.color3})`
+                          : filament.color2
+                            ? `linear-gradient(to right, ${filament.color}, ${filament.color2})`
+                            : filament.color
+                      }}
                     />
                     <span className="font-medium text-black">{filament.name}</span>
                   </div>
