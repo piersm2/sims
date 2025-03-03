@@ -270,7 +270,7 @@ function App() {
     }
   }
 
-  const handleAddPrinter = async (printer: Printer) => {
+  const handleAddPrinter = async () => {
     try {
       await fetchPrinters();
     } catch (err) {
@@ -278,7 +278,7 @@ function App() {
     }
   }
 
-  const handleUpdatePrinter = async (printer: Printer) => {
+  const handleUpdatePrinter = async () => {
     try {
       await fetchPrinters();
     } catch (err) {
@@ -286,7 +286,7 @@ function App() {
     }
   }
 
-  const handleDeletePrinter = async (id: number) => {
+  const handleDeletePrinter = async () => {
     try {
       await fetchPrinters();
     } catch (err) {
@@ -382,7 +382,6 @@ function App() {
                 <PartList
                   parts={parts}
                   printers={printers.filter(p => p.id !== undefined) as { id: number; name: string }[]}
-                  onAddPart={handleAddPart}
                   onUpdatePart={handleUpdatePart}
                   onDeletePart={handleDeletePart}
                 />

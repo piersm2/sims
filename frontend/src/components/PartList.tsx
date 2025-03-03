@@ -8,12 +8,11 @@ type SortDirection = 'asc' | 'desc';
 interface PartListProps {
   parts: Part[];
   printers: { id: number; name: string }[];
-  onAddPart: (part: Part) => void;
   onUpdatePart: (part: Part) => void;
   onDeletePart: (id: number) => void;
 }
 
-const PartList = ({ parts, printers, onAddPart, onUpdatePart, onDeletePart }: PartListProps) => {
+const PartList = ({ parts, printers, onUpdatePart, onDeletePart }: PartListProps) => {
   const [editingPart, setEditingPart] = useState<Part | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
