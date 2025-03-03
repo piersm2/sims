@@ -1,4 +1,4 @@
-import { Fragment, useEffect } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { useForm } from 'react-hook-form'
 import { Part } from '../types/part'
@@ -12,13 +12,13 @@ interface PartFormProps {
 }
 
 export default function PartForm({ isOpen, part, printers, onClose, onSubmit }: PartFormProps) {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<Part>({
+  const { register, handleSubmit, reset, formState: { errors }, setValue, watch } = useForm<Part>({
     defaultValues: {
       name: '',
       description: '',
       quantity: 1,
       minimum_quantity: 0,
-      printer_id: undefined,
+      printer_ids: [],
       supplier: '',
       part_number: '',
       price: undefined,
@@ -26,11 +26,35 @@ export default function PartForm({ isOpen, part, printers, onClose, onSubmit }: 
     }
   })
 
+  // State to track selected printer IDs
+  const [selectedPrinterIds, setSelectedPrinterIds] = useState<number[]>([]);
+  
   useEffect(() => {
     if (part) {
-      reset(part)
+      // Create a modified part object with printer_ids
+      const modifiedPart = {
+        ...part,
+        printer_ids: part.printers?.map(printer => printer.id).filter((id): id is number => id !== undefined) || []
+      };
+      reset(modifiedPart);
+      setSelectedPrinterIds(modifiedPart.printer_ids);
+    } else {
+      setSelectedPrinterIds([]);
     }
-  }, [part, reset])
+  }, [part, reset]);
+
+  // Watch printer_ids to keep local state in sync
+  const watchedPrinterIds = watch('printer_ids');
+  
+  useEffect(() => {
+    if (watchedPrinterIds) {
+      setSelectedPrinterIds(
+        Array.isArray(watchedPrinterIds) 
+          ? watchedPrinterIds.filter((id): id is number => typeof id === 'number')
+          : []
+      );
+    }
+  }, [watchedPrinterIds]);
 
   const onSubmitForm = (data: Part) => {
     // Ensure minimum_quantity is sent as a number
@@ -39,11 +63,22 @@ export default function PartForm({ isOpen, part, printers, onClose, onSubmit }: 
       minimum_quantity: Number(data.minimum_quantity),
       quantity: Number(data.quantity),
       price: data.price ? Number(data.price) : undefined,
-      printer_id: data.printer_id ? Number(data.printer_id) : undefined
+      printer_ids: selectedPrinterIds
     };
     onSubmit(formattedData);
     reset();
+    setSelectedPrinterIds([]);
   }
+
+  // Handle printer selection
+  const handlePrinterToggle = (printerId: number) => {
+    const updatedSelection = selectedPrinterIds.includes(printerId)
+      ? selectedPrinterIds.filter(id => id !== printerId)
+      : [...selectedPrinterIds, printerId];
+    
+    setSelectedPrinterIds(updatedSelection);
+    setValue('printer_ids', updatedSelection);
+  };
 
   return (
     <Transition.Root show={isOpen} as={Fragment}>
@@ -157,19 +192,36 @@ export default function PartForm({ isOpen, part, printers, onClose, onSubmit }: 
 
                         <div>
                           <label className="block text-xs font-medium text-black uppercase tracking-wider mb-1">
-                            {'>>'} Printer
+                            {'>>'} Printers
                           </label>
-                          <select
-                            {...register('printer_id')}
-                            className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-2 text-black placeholder-gray-500 text-base"
-                          >
-                            <option value="">None</option>
-                            {printers.map(printer => (
-                              <option key={printer.id} value={printer.id}>
-                                {printer.name}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-2 text-black">
+                            {printers.length === 0 ? (
+                              <div className="text-gray-500">No printers available</div>
+                            ) : (
+                              <div className="space-y-2">
+                                {printers.map(printer => (
+                                  <div key={printer.id} className="flex items-center">
+                                    <input
+                                      type="checkbox"
+                                      id={`printer-${printer.id}`}
+                                      checked={selectedPrinterIds.includes(printer.id)}
+                                      onChange={() => handlePrinterToggle(printer.id)}
+                                      className="h-4 w-4 border-black rounded-none focus:ring-0"
+                                    />
+                                    <label htmlFor={`printer-${printer.id}`} className="ml-2 block text-sm">
+                                      {printer.name}
+                                    </label>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {/* Hidden input to register the field with react-hook-form */}
+                            <input
+                              type="hidden"
+                              {...register('printer_ids')}
+                              value={selectedPrinterIds.join(',')}
+                            />
+                          </div>
                         </div>
 
                         <div>

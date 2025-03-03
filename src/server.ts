@@ -430,20 +430,26 @@ app.delete('/api/purchase-list/:id', async (req, res) => {
 // Parts Routes
 app.get('/api/parts', async (req, res) => {
   try {
+    // Get all parts
     const parts = await db.all(`
-      SELECT p.*, pr.name as printer_name 
-      FROM parts p 
-      LEFT JOIN printers pr ON p.printer_id = pr.id 
-      ORDER BY p.name
+      SELECT * FROM parts
+      ORDER BY name
     `);
     
-    // Transform the results to match the frontend type
-    const formattedParts = parts.map(part => ({
-      ...part,
-      printer: part.printer_name ? {
-        id: part.printer_id,
-        name: part.printer_name
-      } : null
+    // For each part, get its associated printers
+    const formattedParts = await Promise.all(parts.map(async (part) => {
+      const printers = await db.all(`
+        SELECT pr.id, pr.name
+        FROM printers pr
+        JOIN part_printers pp ON pr.id = pp.printer_id
+        WHERE pp.part_id = ?
+        ORDER BY pr.name
+      `, part.id);
+      
+      return {
+        ...part,
+        printers: printers.length > 0 ? printers : []
+      };
     }));
     
     res.json(formattedParts);
@@ -457,23 +463,27 @@ app.get('/api/parts/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const part = await db.get(`
-      SELECT p.*, pr.name as printer_name 
-      FROM parts p 
-      LEFT JOIN printers pr ON p.printer_id = pr.id 
-      WHERE p.id = ?
+      SELECT * FROM parts
+      WHERE id = ?
     `, id);
     
     if (!part) {
       return res.status(404).json({ error: 'Part not found' });
     }
     
+    // Get associated printers for this part
+    const printers = await db.all(`
+      SELECT pr.id, pr.name
+      FROM printers pr
+      JOIN part_printers pp ON pr.id = pp.printer_id
+      WHERE pp.part_id = ?
+      ORDER BY pr.name
+    `, id);
+    
     // Transform to match frontend type
     const formattedPart = {
       ...part,
-      printer: part.printer_name ? {
-        id: part.printer_id,
-        name: part.printer_name
-      } : null
+      printers: printers.length > 0 ? printers : []
     };
     
     res.json(formattedPart);
@@ -490,40 +500,67 @@ app.post('/api/parts', async (req, res) => {
       description,
       quantity,
       minimum_quantity,
-      printer_id,
+      printer_ids, // Now an array of printer IDs
       supplier,
       part_number,
       price,
       notes
     } = req.body;
     
+    // Start a transaction
+    await db.run('BEGIN TRANSACTION');
+    
+    // Insert the part
     const result = await db.run(
       `INSERT INTO parts (
-        name, description, quantity, minimum_quantity, printer_id,
+        name, description, quantity, minimum_quantity,
         supplier, part_number, price, notes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [name, description, quantity, minimum_quantity, printer_id, 
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [name, description, quantity, minimum_quantity,
        supplier, part_number, price, notes]
     );
     
+    const partId = result.lastID;
+    
+    // Insert printer associations if any
+    if (Array.isArray(printer_ids) && printer_ids.length > 0) {
+      for (const printerId of printer_ids) {
+        await db.run(
+          `INSERT INTO part_printers (part_id, printer_id)
+           VALUES (?, ?)`,
+          [partId, printerId]
+        );
+      }
+    }
+    
+    // Commit the transaction
+    await db.run('COMMIT');
+    
+    // Fetch the newly created part with its printers
     const newPart = await db.get(`
-      SELECT p.*, pr.name as printer_name 
-      FROM parts p 
-      LEFT JOIN printers pr ON p.printer_id = pr.id 
-      WHERE p.id = ?
-    `, result.lastID);
+      SELECT * FROM parts
+      WHERE id = ?
+    `, partId);
+    
+    // Get associated printers
+    const printers = await db.all(`
+      SELECT pr.id, pr.name
+      FROM printers pr
+      JOIN part_printers pp ON pr.id = pp.printer_id
+      WHERE pp.part_id = ?
+      ORDER BY pr.name
+    `, partId);
     
     // Transform to match frontend type
     const formattedPart = {
       ...newPart,
-      printer: newPart.printer_name ? {
-        id: newPart.printer_id,
-        name: newPart.printer_name
-      } : null
+      printers: printers.length > 0 ? printers : []
     };
     
     res.status(201).json(formattedPart);
   } catch (error) {
+    // Rollback on error
+    await db.run('ROLLBACK');
     console.error('Error creating part:', error);
     res.status(500).json({ error: 'Failed to create part' });
   }
@@ -535,17 +572,21 @@ app.put('/api/parts/:id', async (req, res) => {
     console.log('PUT /api/parts/:id - Request body:', JSON.stringify(req.body, null, 2));
     
     const updates = { ...req.body };
+    const printer_ids = updates.printer_ids; // Extract printer_ids
     
     // Remove properties that shouldn't be directly updated
     delete updates.id;
     delete updates.created_at;
-    delete updates.printer; // Remove the printer object from updates
-    delete updates.printer_name; // Remove printer_name as it's not a column in the parts table
+    delete updates.printers; // Remove the printers array from updates
+    delete updates.printer_ids; // Remove printer_ids as we'll handle them separately
     updates.updated_at = new Date().toISOString();
     
     console.log('Updates after cleanup:', JSON.stringify(updates, null, 2));
     
-    // Build the SQL update statement
+    // Start a transaction
+    await db.run('BEGIN TRANSACTION');
+    
+    // Build the SQL update statement for the part
     const fields = Object.keys(updates);
     const setClause = fields.map(field => `${field} = ?`).join(', ');
     const values = fields.map(field => updates[field]);
@@ -553,24 +594,41 @@ app.put('/api/parts/:id', async (req, res) => {
     console.log('SQL set clause:', setClause);
     console.log('SQL values:', JSON.stringify(values, null, 2));
     
-    // Execute the update
+    // Execute the update for the part
     await db.run(
       `UPDATE parts SET ${setClause} WHERE id = ?`,
       [...values, id]
     );
     
+    // Update printer associations
+    if (Array.isArray(printer_ids)) {
+      // Remove existing associations
+      await db.run(
+        `DELETE FROM part_printers WHERE part_id = ?`,
+        [id]
+      );
+      
+      // Add new associations
+      for (const printerId of printer_ids) {
+        await db.run(
+          `INSERT INTO part_printers (part_id, printer_id)
+           VALUES (?, ?)`,
+          [id, printerId]
+        );
+      }
+    }
+    
+    // Commit the transaction
+    await db.run('COMMIT');
+    
     console.log('Update successful, fetching updated part');
     
-    // Fetch the updated part with printer information
-    const query = `
-      SELECT p.*, pr.name as printer_name 
-      FROM parts p 
-      LEFT JOIN printers pr ON p.printer_id = pr.id 
-      WHERE p.id = ?
-    `;
-    console.log('Fetch query:', query);
+    // Fetch the updated part
+    const updatedPart = await db.get(`
+      SELECT * FROM parts
+      WHERE id = ?
+    `, id);
     
-    const updatedPart = await db.get(query, id);
     console.log('Updated part from DB:', JSON.stringify(updatedPart, null, 2));
     
     if (!updatedPart) {
@@ -578,18 +636,26 @@ app.put('/api/parts/:id', async (req, res) => {
       return res.status(404).json({ error: 'Part not found' });
     }
     
+    // Get associated printers
+    const printers = await db.all(`
+      SELECT pr.id, pr.name
+      FROM printers pr
+      JOIN part_printers pp ON pr.id = pp.printer_id
+      WHERE pp.part_id = ?
+      ORDER BY pr.name
+    `, id);
+    
     // Transform to match frontend type
     const formattedPart = {
       ...updatedPart,
-      printer: updatedPart.printer_name ? {
-        id: updatedPart.printer_id,
-        name: updatedPart.printer_name
-      } : null
+      printers: printers.length > 0 ? printers : []
     };
     
     console.log('Formatted part for response:', JSON.stringify(formattedPart, null, 2));
     res.json(formattedPart);
   } catch (error: any) {
+    // Rollback on error
+    await db.run('ROLLBACK');
     console.error('Error updating part:', error);
     res.status(500).json({ error: 'Failed to update part', details: error.message });
   }
@@ -598,9 +664,23 @@ app.put('/api/parts/:id', async (req, res) => {
 app.delete('/api/parts/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Start a transaction
+    await db.run('BEGIN TRANSACTION');
+    
+    // Delete associations first (the ON DELETE CASCADE should handle this, but being explicit)
+    await db.run('DELETE FROM part_printers WHERE part_id = ?', id);
+    
+    // Delete the part
     await db.run('DELETE FROM parts WHERE id = ?', id);
+    
+    // Commit the transaction
+    await db.run('COMMIT');
+    
     res.status(204).send();
   } catch (error) {
+    // Rollback on error
+    await db.run('ROLLBACK');
     console.error('Error deleting part:', error);
     res.status(500).json({ error: 'Failed to delete part' });
   }

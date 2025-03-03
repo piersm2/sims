@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Part } from '../types/part';
 import PartForm from './PartForm';
 
-type SortField = 'name' | 'quantity' | 'supplier' | 'printer_id';
+type SortField = 'name' | 'quantity' | 'supplier' | 'printers';
 type SortDirection = 'asc' | 'desc';
 
 interface PartListProps {
@@ -59,17 +59,23 @@ const PartList = ({ parts, printers, onUpdatePart, onDeletePart }: PartListProps
         (part.description?.toLowerCase().includes(query) || false) ||
         (part.supplier?.toLowerCase().includes(query) || false) ||
         (part.part_number?.toLowerCase().includes(query) || false) ||
-        (part.printer?.name.toLowerCase().includes(query) || false)
+        // Search in all printers
+        (part.printers?.some(printer => 
+          printer.name.toLowerCase().includes(query)
+        ) || false)
       );
     })
     .sort((a, b) => {
-      let aValue: any = a[sortField];
-      let bValue: any = b[sortField];
+      let aValue: any;
+      let bValue: any;
       
-      // Special handling for printer_id to sort by printer name
-      if (sortField === 'printer_id') {
-        aValue = a.printer?.name || '';
-        bValue = b.printer?.name || '';
+      // Special handling for printers to sort by printer names
+      if (sortField === 'printers') {
+        aValue = a.printers?.map(p => p.name).join(', ') || '';
+        bValue = b.printers?.map(p => p.name).join(', ') || '';
+      } else {
+        aValue = a[sortField];
+        bValue = b[sortField];
       }
       
       if (aValue === null || aValue === undefined) return 1;
@@ -165,9 +171,9 @@ const PartList = ({ parts, printers, onUpdatePart, onDeletePart }: PartListProps
                 <th
                   scope="col"
                   className="py-3 px-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:text-gray-300"
-                  onClick={() => handleSort('printer_id')}
+                  onClick={() => handleSort('printers')}
                 >
-                  Printer {getSortIcon('printer_id')}
+                  Printers {getSortIcon('printers')}
                 </th>
                 <th
                   scope="col"
@@ -226,7 +232,9 @@ const PartList = ({ parts, printers, onUpdatePart, onDeletePart }: PartListProps
                       </div>
                     </td>
                     <td className="px-3 py-2 text-sm text-black border-r-2 border-black">
-                      {part.printer?.name || '-'}
+                      {part.printers && part.printers.length > 0 
+                        ? part.printers.map(printer => printer.name).join(', ')
+                        : '-'}
                     </td>
                     <td className="px-3 py-2 text-sm text-black border-r-2 border-black">
                       {part.supplier || '-'}
