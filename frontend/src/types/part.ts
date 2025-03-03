@@ -9,6 +9,7 @@ export interface Part {
     supplier?: string;
     part_number?: string;
     price?: number;
+    link?: string;
     notes?: string;
     created_at?: string;
     updated_at?: string;

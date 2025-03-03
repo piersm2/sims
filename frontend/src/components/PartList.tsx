@@ -59,6 +59,7 @@ const PartList = ({ parts, printers, onUpdatePart, onDeletePart }: PartListProps
         (part.description?.toLowerCase().includes(query) || false) ||
         (part.supplier?.toLowerCase().includes(query) || false) ||
         (part.part_number?.toLowerCase().includes(query) || false) ||
+        (part.link?.toLowerCase().includes(query) || false) ||
         // Search in all printers
         (part.printers?.some(printer => 
           printer.name.toLowerCase().includes(query)
@@ -188,6 +189,12 @@ const PartList = ({ parts, printers, onUpdatePart, onDeletePart }: PartListProps
                 >
                   Part Number
                 </th>
+                <th
+                  scope="col"
+                  className="py-3 px-3 text-left text-xs font-medium text-white uppercase tracking-wider"
+                >
+                  Link
+                </th>
                 <th scope="col" className="relative py-3 px-3">
                   <span className="sr-only">Actions</span>
                 </th>
@@ -241,6 +248,18 @@ const PartList = ({ parts, printers, onUpdatePart, onDeletePart }: PartListProps
                     </td>
                     <td className="px-3 py-2 text-sm text-black border-r-2 border-black">
                       {part.part_number || '-'}
+                    </td>
+                    <td className="px-3 py-2 text-sm text-black border-r-2 border-black">
+                      {part.link ? (
+                        <a 
+                          href={part.link} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-blue-600 hover:text-blue-800 underline"
+                        >
+                          Purchase
+                        </a>
+                      ) : '-'}
                     </td>
                     <td className="px-3 py-2 text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">

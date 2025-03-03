@@ -504,6 +504,7 @@ app.post('/api/parts', async (req, res) => {
       supplier,
       part_number,
       price,
+      link,
       notes
     } = req.body;
     
@@ -514,10 +515,10 @@ app.post('/api/parts', async (req, res) => {
     const result = await db.run(
       `INSERT INTO parts (
         name, description, quantity, minimum_quantity,
-        supplier, part_number, price, notes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        supplier, part_number, price, link, notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [name, description, quantity, minimum_quantity,
-       supplier, part_number, price, notes]
+       supplier, part_number, price, link, notes]
     );
     
     const partId = result.lastID;
@@ -686,4 +687,4 @@ app.delete('/api/parts/:id', async (req, res) => {
   }
 });
 
-export default app; 
+export default app;

@@ -22,7 +22,8 @@ export default function PartForm({ isOpen, part, printers, onClose, onSubmit }: 
       supplier: '',
       part_number: '',
       price: undefined,
-      notes: ''
+      notes: '',
+      link: ''
     }
   })
 
@@ -259,6 +260,18 @@ export default function PartForm({ isOpen, part, printers, onClose, onSubmit }: 
                               className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-2 text-black placeholder-gray-500 text-base"
                             />
                           </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-black uppercase tracking-wider mb-1">
+                            {'>>'} Link
+                          </label>
+                          <input
+                            type="url"
+                            {...register('link')}
+                            placeholder="https://example.com/product"
+                            className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-2 text-black placeholder-gray-500 text-base"
+                          />
                         </div>
 
                         <div>
