@@ -427,4 +427,183 @@ app.delete('/api/purchase-list/:id', async (req, res) => {
   }
 })
 
+// Parts Routes
+app.get('/api/parts', async (req, res) => {
+  try {
+    const parts = await db.all(`
+      SELECT p.*, pr.name as printer_name 
+      FROM parts p 
+      LEFT JOIN printers pr ON p.printer_id = pr.id 
+      ORDER BY p.name
+    `);
+    
+    // Transform the results to match the frontend type
+    const formattedParts = parts.map(part => ({
+      ...part,
+      printer: part.printer_name ? {
+        id: part.printer_id,
+        name: part.printer_name
+      } : null
+    }));
+    
+    res.json(formattedParts);
+  } catch (error) {
+    console.error('Error fetching parts:', error);
+    res.status(500).json({ error: 'Failed to fetch parts' });
+  }
+});
+
+app.get('/api/parts/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const part = await db.get(`
+      SELECT p.*, pr.name as printer_name 
+      FROM parts p 
+      LEFT JOIN printers pr ON p.printer_id = pr.id 
+      WHERE p.id = ?
+    `, id);
+    
+    if (!part) {
+      return res.status(404).json({ error: 'Part not found' });
+    }
+    
+    // Transform to match frontend type
+    const formattedPart = {
+      ...part,
+      printer: part.printer_name ? {
+        id: part.printer_id,
+        name: part.printer_name
+      } : null
+    };
+    
+    res.json(formattedPart);
+  } catch (error) {
+    console.error('Error fetching part:', error);
+    res.status(500).json({ error: 'Failed to fetch part' });
+  }
+});
+
+app.post('/api/parts', async (req, res) => {
+  try {
+    const {
+      name,
+      description,
+      quantity,
+      minimum_quantity,
+      printer_id,
+      supplier,
+      part_number,
+      price,
+      notes
+    } = req.body;
+    
+    const result = await db.run(
+      `INSERT INTO parts (
+        name, description, quantity, minimum_quantity, printer_id,
+        supplier, part_number, price, notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [name, description, quantity, minimum_quantity, printer_id, 
+       supplier, part_number, price, notes]
+    );
+    
+    const newPart = await db.get(`
+      SELECT p.*, pr.name as printer_name 
+      FROM parts p 
+      LEFT JOIN printers pr ON p.printer_id = pr.id 
+      WHERE p.id = ?
+    `, result.lastID);
+    
+    // Transform to match frontend type
+    const formattedPart = {
+      ...newPart,
+      printer: newPart.printer_name ? {
+        id: newPart.printer_id,
+        name: newPart.printer_name
+      } : null
+    };
+    
+    res.status(201).json(formattedPart);
+  } catch (error) {
+    console.error('Error creating part:', error);
+    res.status(500).json({ error: 'Failed to create part' });
+  }
+});
+
+app.put('/api/parts/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log('PUT /api/parts/:id - Request body:', JSON.stringify(req.body, null, 2));
+    
+    const updates = { ...req.body };
+    
+    // Remove properties that shouldn't be directly updated
+    delete updates.id;
+    delete updates.created_at;
+    delete updates.printer; // Remove the printer object from updates
+    delete updates.printer_name; // Remove printer_name as it's not a column in the parts table
+    updates.updated_at = new Date().toISOString();
+    
+    console.log('Updates after cleanup:', JSON.stringify(updates, null, 2));
+    
+    // Build the SQL update statement
+    const fields = Object.keys(updates);
+    const setClause = fields.map(field => `${field} = ?`).join(', ');
+    const values = fields.map(field => updates[field]);
+    
+    console.log('SQL set clause:', setClause);
+    console.log('SQL values:', JSON.stringify(values, null, 2));
+    
+    // Execute the update
+    await db.run(
+      `UPDATE parts SET ${setClause} WHERE id = ?`,
+      [...values, id]
+    );
+    
+    console.log('Update successful, fetching updated part');
+    
+    // Fetch the updated part with printer information
+    const query = `
+      SELECT p.*, pr.name as printer_name 
+      FROM parts p 
+      LEFT JOIN printers pr ON p.printer_id = pr.id 
+      WHERE p.id = ?
+    `;
+    console.log('Fetch query:', query);
+    
+    const updatedPart = await db.get(query, id);
+    console.log('Updated part from DB:', JSON.stringify(updatedPart, null, 2));
+    
+    if (!updatedPart) {
+      console.log('Part not found after update');
+      return res.status(404).json({ error: 'Part not found' });
+    }
+    
+    // Transform to match frontend type
+    const formattedPart = {
+      ...updatedPart,
+      printer: updatedPart.printer_name ? {
+        id: updatedPart.printer_id,
+        name: updatedPart.printer_name
+      } : null
+    };
+    
+    console.log('Formatted part for response:', JSON.stringify(formattedPart, null, 2));
+    res.json(formattedPart);
+  } catch (error: any) {
+    console.error('Error updating part:', error);
+    res.status(500).json({ error: 'Failed to update part', details: error.message });
+  }
+});
+
+app.delete('/api/parts/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.run('DELETE FROM parts WHERE id = ?', id);
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting part:', error);
+    res.status(500).json({ error: 'Failed to delete part' });
+  }
+});
+
 export default app; 

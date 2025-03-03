@@ -3,26 +3,33 @@ import FilamentList from './components/FilamentList'
 import FilamentForm from './components/FilamentForm'
 import PrintQueue from './components/PrintQueue'
 import PurchaseList from './components/PurchaseList'
+import PartList from './components/PartList'
 import { Filament } from './types/filament'
 import { PrintQueueItem, Printer } from './types/printer'
 import { PurchaseListItem } from './types/purchase'
+import { Part } from './types/part'
 import { API_URL } from './config'
+import PartForm from './components/PartForm'
 
 function App() {
   const [filaments, setFilaments] = useState<Filament[]>([])
   const [printers, setPrinters] = useState<Printer[]>([])
   const [queueItems, setQueueItems] = useState<PrintQueueItem[]>([])
   const [purchaseItems, setPurchaseItems] = useState<PurchaseListItem[]>([])
+  const [parts, setParts] = useState<Part[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isAddingFilament, setIsAddingFilament] = useState(false)
+  const [isAddingPart, setIsAddingPart] = useState(false)
+  const [showParts, setShowParts] = useState(false)
 
   useEffect(() => {
     Promise.all([
       fetchFilaments(),
       fetchPrinters(),
       fetchPrintQueue(),
-      fetchPurchaseItems()
+      fetchPurchaseItems(),
+      fetchParts()
     ]).finally(() => setIsLoading(false))
   }, [])
 
@@ -70,6 +77,17 @@ function App() {
     }
   }
 
+  const fetchParts = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/parts`)
+      if (!response.ok) throw new Error('Failed to fetch parts')
+      const data = await response.json()
+      setParts(data)
+    } catch (err) {
+      setError('Failed to load parts')
+    }
+  }
+
   const handleAddFilament = async (filament: Filament) => {
     try {
       const response = await fetch(`${API_URL}/api/filaments`, {
@@ -102,6 +120,8 @@ function App() {
   }
 
   const handleDeleteFilament = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this filament?')) return
+    
     try {
       const response = await fetch(`${API_URL}/api/filaments/${id}`, {
         method: 'DELETE'
@@ -145,10 +165,13 @@ function App() {
   }
 
   const handleDeleteQueueItem = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this queue item?')) return
+    
     try {
-      await fetch(`${API_URL}/api/print-queue/${id}`, {
+      const response = await fetch(`${API_URL}/api/print-queue/${id}`, {
         method: 'DELETE'
       })
+      if (!response.ok) throw new Error('Failed to delete queue item')
       await fetchPrintQueue()
       setError(null)
     } catch (err) {
@@ -187,6 +210,8 @@ function App() {
   }
 
   const handleDeletePurchaseItem = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this purchase item?')) return
+    
     try {
       const response = await fetch(`${API_URL}/api/purchase-list/${id}`, {
         method: 'DELETE'
@@ -196,6 +221,51 @@ function App() {
       setError(null)
     } catch (err) {
       setError('Failed to delete purchase item')
+    }
+  }
+
+  const handleAddPart = async (part: Part) => {
+    try {
+      const response = await fetch(`${API_URL}/api/parts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(part)
+      })
+      if (!response.ok) throw new Error('Failed to add part')
+      await fetchParts()
+      setError(null)
+    } catch (err) {
+      setError('Failed to add part')
+    }
+  }
+
+  const handleUpdatePart = async (part: Part) => {
+    try {
+      const response = await fetch(`${API_URL}/api/parts/${part.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(part)
+      })
+      if (!response.ok) throw new Error('Failed to update part')
+      await fetchParts()
+      setError(null)
+    } catch (err) {
+      setError('Failed to update part')
+    }
+  }
+
+  const handleDeletePart = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this part?')) return
+    
+    try {
+      const response = await fetch(`${API_URL}/api/parts/${id}`, {
+        method: 'DELETE'
+      })
+      if (!response.ok) throw new Error('Failed to delete part')
+      await fetchParts()
+      setError(null)
+    } catch (err) {
+      setError('Failed to delete part')
     }
   }
 
@@ -212,18 +282,38 @@ function App() {
       <div className="w-full">
         <div className="flex flex-col space-y-0 sm:space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-black border-2 border-black p-4 space-y-4 sm:space-y-0">
-            <div className="flex-1">
+            <div className="w-1/4">
               <div className="flex flex-col sm:flex-row sm:items-baseline space-y-2 sm:space-y-0 sm:space-x-4">
                 <h1 className="text-2xl font-medium tracking-wider text-white">SIMS TERMINAL v1.0</h1>
                 <div className="text-xs text-gray-300">SPOOL INVENTORY MANAGEMENT SYSTEM</div>
               </div>
             </div>
-            <button
-              onClick={() => setIsAddingFilament(true)}
-              className="w-full sm:w-auto px-4 py-2 border border-black rounded-none text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-1 focus:ring-black transition-colors uppercase tracking-wider"
-            >
-              NEW RECORD
-            </button>
+            <div className="flex justify-center w-1/2">
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setShowParts(false)}
+                  className={`w-auto px-4 py-2 border border-black rounded-none text-xs font-bold text-white ${!showParts ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'} focus:outline-none focus:ring-1 focus:ring-black transition-colors uppercase tracking-wider`}
+                >
+                  FILAMENTS
+                </button>
+                <button
+                  onClick={() => setShowParts(true)}
+                  className={`w-auto px-4 py-2 border border-black rounded-none text-xs font-bold text-white ${showParts ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'} focus:outline-none focus:ring-1 focus:ring-black transition-colors uppercase tracking-wider`}
+                >
+                  PARTS
+                </button>
+              </div>
+            </div>
+            <div className="w-1/4 flex justify-end">
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => showParts ? setIsAddingPart(true) : setIsAddingFilament(true)}
+                  className="w-full sm:w-auto px-4 py-2 border border-black rounded-none text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-1 focus:ring-black transition-colors uppercase tracking-wider"
+                >
+                  NEW {showParts ? 'PART' : 'RECORD'}
+                </button>
+              </div>
+            </div>
           </div>
 
           {error && (
@@ -233,13 +323,43 @@ function App() {
             </div>
           )}
 
+          {isAddingFilament && !showParts && (
+            <FilamentForm
+              isOpen={isAddingFilament}
+              onSubmit={handleAddFilament}
+              onClose={() => setIsAddingFilament(false)}
+            />
+          )}
+
+          {isAddingPart && showParts && (
+            <PartForm
+              isOpen={isAddingPart}
+              printers={printers.filter(p => p.id !== undefined) as { id: number; name: string }[]}
+              onSubmit={(part) => {
+                handleAddPart(part);
+                setIsAddingPart(false);
+              }}
+              onClose={() => setIsAddingPart(false)}
+            />
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
             <div className="lg:col-span-3">
-              <FilamentList
-                filaments={filaments}
-                onUpdate={handleUpdateFilament}
-                onDelete={handleDeleteFilament}
-              />
+              {showParts ? (
+                <PartList
+                  parts={parts}
+                  printers={printers.filter(p => p.id !== undefined) as { id: number; name: string }[]}
+                  onAddPart={handleAddPart}
+                  onUpdatePart={handleUpdatePart}
+                  onDeletePart={handleDeletePart}
+                />
+              ) : (
+                <FilamentList
+                  filaments={filaments}
+                  onUpdate={handleUpdateFilament}
+                  onDelete={handleDeleteFilament}
+                />
+              )}
             </div>
             <div>
               <PrintQueue
@@ -261,14 +381,6 @@ function App() {
               </div>
             </div>
           </div>
-
-          {isAddingFilament && (
-            <FilamentForm
-              isOpen={isAddingFilament}
-              onSubmit={handleAddFilament}
-              onClose={() => setIsAddingFilament(false)}
-            />
-          )}
         </div>
       </div>
     </div>
