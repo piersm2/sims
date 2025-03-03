@@ -9,11 +9,13 @@ interface PrinterFormProps {
 export default function PrinterForm({ onPrinterAdded }: PrinterFormProps) {
     const [name, setName] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!name.trim()) return;
-
+        
+        setIsSubmitting(true);
         try {
             const response = await fetch(`${API_URL}/api/printers`, {
                 method: 'POST',
@@ -29,15 +31,13 @@ export default function PrinterForm({ onPrinterAdded }: PrinterFormProps) {
             setError(null);
         } catch (err) {
             setError('Failed to add printer');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     return (
-        <div className="bg-white border-2 border-black">
-            <div className="p-4 bg-black text-white">
-                <h2 className="text-lg font-medium tracking-wider">ADD PRINTER</h2>
-            </div>
-
+        <div className="bg-white">
             <form onSubmit={handleSubmit} className="p-4">
                 <div className="space-y-3">
                     <input
@@ -46,12 +46,14 @@ export default function PrinterForm({ onPrinterAdded }: PrinterFormProps) {
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Enter printer name"
                         className="w-full px-3 py-2 border-2 border-black text-sm"
+                        disabled={isSubmitting}
                     />
                     <button
                         type="submit"
-                        className="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider"
+                        className="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider border border-black"
+                        disabled={isSubmitting}
                     >
-                        Add Printer
+                        {isSubmitting ? 'Adding...' : 'Add Printer'}
                     </button>
                 </div>
             </form>

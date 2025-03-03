@@ -4,6 +4,7 @@ import FilamentForm from './components/FilamentForm'
 import PrintQueue from './components/PrintQueue'
 import PurchaseList from './components/PurchaseList'
 import PartList from './components/PartList'
+import PrinterList from './components/PrinterList'
 import { Filament } from './types/filament'
 import { PrintQueueItem, Printer } from './types/printer'
 import { PurchaseListItem } from './types/purchase'
@@ -21,7 +22,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true)
   const [isAddingFilament, setIsAddingFilament] = useState(false)
   const [isAddingPart, setIsAddingPart] = useState(false)
-  const [showParts, setShowParts] = useState(false)
+  const [activeView, setActiveView] = useState<'filaments' | 'parts' | 'printers'>('filaments')
 
   useEffect(() => {
     Promise.all([
@@ -269,6 +270,30 @@ function App() {
     }
   }
 
+  const handleAddPrinter = async (printer: Printer) => {
+    try {
+      await fetchPrinters();
+    } catch (err) {
+      setError('Failed to refresh printers');
+    }
+  }
+
+  const handleUpdatePrinter = async (printer: Printer) => {
+    try {
+      await fetchPrinters();
+    } catch (err) {
+      setError('Failed to refresh printers');
+    }
+  }
+
+  const handleDeletePrinter = async (id: number) => {
+    try {
+      await fetchPrinters();
+    } catch (err) {
+      setError('Failed to refresh printers');
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white p-8 font-mono">
@@ -291,27 +316,35 @@ function App() {
             <div className="flex justify-center w-1/2">
               <div className="flex space-x-2">
                 <button
-                  onClick={() => setShowParts(false)}
-                  className={`w-auto px-4 py-2 border border-black rounded-none text-xs font-bold text-white ${!showParts ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'} focus:outline-none focus:ring-1 focus:ring-black transition-colors uppercase tracking-wider`}
+                  onClick={() => setActiveView('filaments')}
+                  className={`w-auto px-4 py-2 border border-black rounded-none text-xs font-bold text-white ${activeView === 'filaments' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'} focus:outline-none focus:ring-1 focus:ring-black transition-colors uppercase tracking-wider`}
                 >
                   FILAMENTS
                 </button>
                 <button
-                  onClick={() => setShowParts(true)}
-                  className={`w-auto px-4 py-2 border border-black rounded-none text-xs font-bold text-white ${showParts ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'} focus:outline-none focus:ring-1 focus:ring-black transition-colors uppercase tracking-wider`}
+                  onClick={() => setActiveView('parts')}
+                  className={`w-auto px-4 py-2 border border-black rounded-none text-xs font-bold text-white ${activeView === 'parts' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'} focus:outline-none focus:ring-1 focus:ring-black transition-colors uppercase tracking-wider`}
                 >
                   PARTS
+                </button>
+                <button
+                  onClick={() => setActiveView('printers')}
+                  className={`w-auto px-4 py-2 border border-black rounded-none text-xs font-bold text-white ${activeView === 'printers' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'} focus:outline-none focus:ring-1 focus:ring-black transition-colors uppercase tracking-wider`}
+                >
+                  PRINTERS
                 </button>
               </div>
             </div>
             <div className="w-1/4 flex justify-end">
               <div className="flex space-x-2">
-                <button
-                  onClick={() => showParts ? setIsAddingPart(true) : setIsAddingFilament(true)}
-                  className="w-full sm:w-auto px-4 py-2 border border-black rounded-none text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-1 focus:ring-black transition-colors uppercase tracking-wider"
-                >
-                  NEW {showParts ? 'PART' : 'RECORD'}
-                </button>
+                {activeView !== 'printers' && (
+                  <button
+                    onClick={() => activeView === 'parts' ? setIsAddingPart(true) : setIsAddingFilament(true)}
+                    className="w-full sm:w-auto px-4 py-2 border border-black rounded-none text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-1 focus:ring-black transition-colors uppercase tracking-wider"
+                  >
+                    NEW {activeView === 'parts' ? 'PART' : 'RECORD'}
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -323,7 +356,7 @@ function App() {
             </div>
           )}
 
-          {isAddingFilament && !showParts && (
+          {isAddingFilament && activeView === 'filaments' && (
             <FilamentForm
               isOpen={isAddingFilament}
               onSubmit={handleAddFilament}
@@ -331,7 +364,7 @@ function App() {
             />
           )}
 
-          {isAddingPart && showParts && (
+          {isAddingPart && activeView === 'parts' && (
             <PartForm
               isOpen={isAddingPart}
               printers={printers.filter(p => p.id !== undefined) as { id: number; name: string }[]}
@@ -345,7 +378,7 @@ function App() {
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
             <div className="lg:col-span-3">
-              {showParts ? (
+              {activeView === 'parts' && (
                 <PartList
                   parts={parts}
                   printers={printers.filter(p => p.id !== undefined) as { id: number; name: string }[]}
@@ -353,11 +386,20 @@ function App() {
                   onUpdatePart={handleUpdatePart}
                   onDeletePart={handleDeletePart}
                 />
-              ) : (
+              )}
+              {activeView === 'filaments' && (
                 <FilamentList
                   filaments={filaments}
                   onUpdate={handleUpdateFilament}
                   onDelete={handleDeleteFilament}
+                />
+              )}
+              {activeView === 'printers' && (
+                <PrinterList
+                  printers={printers}
+                  onUpdate={handleUpdatePrinter}
+                  onDelete={handleDeletePrinter}
+                  onAdd={handleAddPrinter}
                 />
               )}
             </div>
