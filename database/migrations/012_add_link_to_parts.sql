@@ -1,5 +1,5 @@
 -- Add link field to parts table
-INSERT INTO schema_versions (version) VALUES (11);
+INSERT INTO schema_versions (version) VALUES (12);
 
 -- Create a temporary table with the new schema
 CREATE TABLE parts_temp (
