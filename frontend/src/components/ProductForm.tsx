@@ -342,13 +342,11 @@ const ProductForm = ({
               </div>
             </div>
             
-            {product && product.id && (
-              <FilamentSelector
-                productId={product.id}
-                selectedFilaments={selectedFilaments}
-                onFilamentsChange={handleFilamentsChange}
-              />
-            )}
+            <FilamentSelector
+              productId={product?.id}
+              selectedFilaments={selectedFilaments}
+              onFilamentsChange={handleFilamentsChange}
+            />
           </div>
           
           <div className="col-span-1 md:col-span-2 flex justify-end space-x-2 mt-4">

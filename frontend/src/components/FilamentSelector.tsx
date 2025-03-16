@@ -51,21 +51,23 @@ const FilamentSelector = ({ productId, selectedFilaments, onFilamentsChange }: F
 
   // Add a filament to the product
   const handleAddFilament = async (filamentId: number) => {
-    if (!productId) return;
-
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/api/products/${productId}/filaments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ filament_id: filamentId }),
-      });
+      
+      // If we have a productId, update the association in the database
+      if (productId) {
+        const response = await fetch(`${API_URL}/api/products/${productId}/filaments`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ filament_id: filamentId }),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to add filament');
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to add filament');
+        }
       }
 
       // Find the filament in allFilaments and add it to selectedFilaments
@@ -87,17 +89,19 @@ const FilamentSelector = ({ productId, selectedFilaments, onFilamentsChange }: F
 
   // Remove a filament from the product
   const handleRemoveFilament = async (filamentId: number) => {
-    if (!productId) return;
-
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/api/products/${productId}/filaments/${filamentId}`, {
-        method: 'DELETE',
-      });
+      
+      // If we have a productId, update the association in the database
+      if (productId) {
+        const response = await fetch(`${API_URL}/api/products/${productId}/filaments/${filamentId}`, {
+          method: 'DELETE',
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to remove filament');
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to remove filament');
+        }
       }
 
       // Remove the filament from selectedFilaments
@@ -173,61 +177,59 @@ const FilamentSelector = ({ productId, selectedFilaments, onFilamentsChange }: F
       </div>
       
       {/* Add filament form with stylized dropdown */}
-      {productId && (
-        <div className="relative" ref={filamentDropdownRef} style={{ position: 'static' }}>
-          <div 
-            className="w-full px-3 py-2 border-2 border-black text-sm flex items-center cursor-pointer"
-            onClick={() => setIsFilamentDropdownOpen(!isFilamentDropdownOpen)}
-          >
-            <span className="text-gray-500">Add filament to product</span>
-          </div>
-          {isFilamentDropdownOpen && (
-            <div className="fixed z-50 w-full mt-1 bg-white border-2 border-black shadow-lg max-h-64 overflow-y-auto" 
-                 style={{ 
-                   width: filamentDropdownRef.current ? filamentDropdownRef.current.offsetWidth : 'auto',
-                   left: filamentDropdownRef.current ? filamentDropdownRef.current.getBoundingClientRect().left : 0,
-                   top: filamentDropdownRef.current ? filamentDropdownRef.current.getBoundingClientRect().bottom + window.scrollY : 0
-                 }}>
-              <input
-                type="text"
-                value={filamentSearch}
-                onChange={(e) => setFilamentSearch(e.target.value)}
-                placeholder="Search filaments..."
-                className="w-full px-3 py-2 border-b-2 border-black text-sm"
-                onClick={(e) => e.stopPropagation()}
-              />
-              <div className="divide-y divide-gray-200">
-                {filteredFilaments.length > 0 ? (
-                  filteredFilaments.map((filament) => (
-                    <div
-                      key={filament.id}
-                      className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
-                      onClick={() => filament.id && handleAddFilament(filament.id)}
-                    >
-                      <div 
-                        className="h-4 w-4 border border-black mr-2"
-                        style={{ backgroundColor: filament.color }}
-                      />
-                      <div>
-                        <div>{filament.name}</div>
-                        <div className="text-gray-500 text-xs">
-                          {filament.material} - {filament.manufacturer || 'No manufacturer'}
-                        </div>
+      <div className="relative" ref={filamentDropdownRef} style={{ position: 'static' }}>
+        <div 
+          className="w-full px-3 py-2 border-2 border-black text-sm flex items-center cursor-pointer"
+          onClick={() => setIsFilamentDropdownOpen(!isFilamentDropdownOpen)}
+        >
+          <span className="text-gray-500">Add filament to product</span>
+        </div>
+        {isFilamentDropdownOpen && (
+          <div className="fixed z-50 w-full mt-1 bg-white border-2 border-black shadow-lg max-h-64 overflow-y-auto" 
+               style={{ 
+                 width: filamentDropdownRef.current ? filamentDropdownRef.current.offsetWidth : 'auto',
+                 left: filamentDropdownRef.current ? filamentDropdownRef.current.getBoundingClientRect().left : 0,
+                 top: filamentDropdownRef.current ? filamentDropdownRef.current.getBoundingClientRect().bottom + window.scrollY : 0
+               }}>
+            <input
+              type="text"
+              value={filamentSearch}
+              onChange={(e) => setFilamentSearch(e.target.value)}
+              placeholder="Search filaments..."
+              className="w-full px-3 py-2 border-b-2 border-black text-sm"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <div className="divide-y divide-gray-200">
+              {filteredFilaments.length > 0 ? (
+                filteredFilaments.map((filament) => (
+                  <div
+                    key={filament.id}
+                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
+                    onClick={() => filament.id && handleAddFilament(filament.id)}
+                  >
+                    <div 
+                      className="h-4 w-4 border border-black mr-2"
+                      style={{ backgroundColor: filament.color }}
+                    />
+                    <div>
+                      <div>{filament.name}</div>
+                      <div className="text-gray-500 text-xs">
+                        {filament.material} - {filament.manufacturer || 'No manufacturer'}
                       </div>
                     </div>
-                  ))
-                ) : (
-                  <div className="px-3 py-2 text-gray-500 text-sm">No matching filaments found</div>
-                )}
-              </div>
+                  </div>
+                ))
+              ) : (
+                <div className="px-3 py-2 text-gray-500 text-sm">No matching filaments found</div>
+              )}
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
       
-      {!productId && (
-        <p className="text-sm text-gray-500">
-          Save the product first to associate filaments.
+      {!productId && selectedFilaments.length > 0 && (
+        <p className="text-xs text-gray-500 mt-2">
+          Note: Filaments will be associated with the product after saving.
         </p>
       )}
     </div>

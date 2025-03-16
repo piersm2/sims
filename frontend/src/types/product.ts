@@ -37,4 +37,5 @@ export interface ProductFormData {
   additional_parts_cost: number;
   list_price: number;
   notes: string;
+  filaments?: Filament[];
 } 

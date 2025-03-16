@@ -434,15 +434,46 @@ function App() {
 
   const handleAddProduct = async (product: ProductFormData) => {
     try {
+      // Extract filaments from the product data
+      const filaments = product.filaments || [];
+      
+      // Create the product without filaments first
       const response = await fetch(`${API_URL}/api/products`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(product)
+        body: JSON.stringify({
+          name: product.name,
+          business: product.business,
+          filament_used: product.filament_used,
+          print_prep_time: product.print_prep_time,
+          post_processing_time: product.post_processing_time,
+          additional_parts_cost: product.additional_parts_cost,
+          list_price: product.list_price,
+          notes: product.notes
+        })
       })
       
       if (!response.ok) throw new Error('Failed to add product')
+      
+      // Get the newly created product ID
+      const newProduct = await response.json();
+      
+      // Associate filaments if any were selected
+      if (filaments.length > 0 && newProduct.id) {
+        for (const filament of filaments) {
+          if (filament.id) {
+            await fetch(`${API_URL}/api/products/${newProduct.id}/filaments`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ filament_id: filament.id })
+            });
+          }
+        }
+      }
       
       await fetchProducts()
       setIsAddingProduct(false)
