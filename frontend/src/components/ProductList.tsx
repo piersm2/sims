@@ -7,7 +7,6 @@ interface ProductListProps {
   products: ProductWithCalculations[];
   onUpdate: (product: Product) => void;
   onDelete: (id: number) => void;
-  onAdd: (product: Product) => void;
   hourlyRate: number;
   wearTearPercentage: number;
   desiredMarkup?: number;
@@ -31,7 +30,6 @@ const ProductList = ({
   products,
   onUpdate,
   onDelete,
-  onAdd,
   hourlyRate,
   wearTearPercentage,
   desiredMarkup = 0,

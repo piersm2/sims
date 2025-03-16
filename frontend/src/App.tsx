@@ -646,7 +646,6 @@ function App() {
                     products={products}
                     onUpdate={handleUpdateProduct}
                     onDelete={handleDeleteProduct}
-                    onAdd={() => setIsAddingProduct(true)}
                     hourlyRate={settings.hourly_rate}
                     wearTearPercentage={settings.wear_tear_markup}
                     desiredMarkup={settings.desired_markup}
