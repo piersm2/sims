@@ -5,10 +5,13 @@ import PrintQueue from './components/PrintQueue'
 import PurchaseList from './components/PurchaseList'
 import PartList from './components/PartList'
 import PrinterList from './components/PrinterList'
+import ProductList from './components/ProductList'
+import ProductForm from './components/ProductForm'
 import { Filament } from './types/filament'
 import { PrintQueueItem, Printer } from './types/printer'
 import { PurchaseListItem } from './types/purchase'
 import { Part } from './types/part'
+import { Product, ProductFormData, ProductWithCalculations } from './types/product'
 import { API_URL } from './config'
 import PartForm from './components/PartForm'
 
@@ -18,11 +21,36 @@ function App() {
   const [queueItems, setQueueItems] = useState<PrintQueueItem[]>([])
   const [purchaseItems, setPurchaseItems] = useState<PurchaseListItem[]>([])
   const [parts, setParts] = useState<Part[]>([])
+  const [products, setProducts] = useState<ProductWithCalculations[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isAddingFilament, setIsAddingFilament] = useState(false)
   const [isAddingPart, setIsAddingPart] = useState(false)
-  const [activeView, setActiveView] = useState<'filaments' | 'parts' | 'printers'>('filaments')
+  const [isAddingProduct, setIsAddingProduct] = useState(false)
+  const [activeView, setActiveView] = useState<'filaments' | 'parts' | 'printers' | 'products'>('filaments')
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  
+  // Global settings for profit margin calculations
+  interface Settings {
+    spool_weight: number;
+    filament_markup: number;
+    hourly_rate: number;
+    wear_tear_markup: number;
+    desired_markup: number;
+    platform_fees: number;
+    filament_spool_price: number;
+    [key: string]: number;
+  }
+
+  const [settings, setSettings] = useState<Settings>({
+    spool_weight: 1000,
+    filament_markup: 20,
+    hourly_rate: 20,
+    wear_tear_markup: 5,
+    desired_markup: 150,
+    platform_fees: 7,
+    filament_spool_price: 18
+  })
 
   useEffect(() => {
     Promise.all([
@@ -30,7 +58,9 @@ function App() {
       fetchPrinters(),
       fetchPrintQueue(),
       fetchPurchaseItems(),
-      fetchParts()
+      fetchParts(),
+      fetchProducts(),
+      fetchSettings()
     ]).finally(() => setIsLoading(false))
   }, [])
 
@@ -86,6 +116,110 @@ function App() {
       setParts(data)
     } catch (err) {
       setError('Failed to load parts')
+    }
+  }
+
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/products`)
+      if (!response.ok) throw new Error('Failed to fetch products')
+      const data = await response.json()
+      
+      // Calculate profit margins for each product
+      const productsWithCalculations = data.map((product: Product) => {
+        return calculateProductMargins(product)
+      })
+      
+      setProducts(productsWithCalculations)
+    } catch (err) {
+      setError('Failed to load products')
+    }
+  }
+  
+  const calculateProductMargins = (product: Product): ProductWithCalculations => {
+    // Calculate labor cost
+    const totalMinutes = product.print_prep_time + product.post_processing_time
+    const laborCost = (totalMinutes / 60) * settings.hourly_rate
+    
+    // Calculate filament cost
+    const filamentCost = (product.filament_used / 1000) * settings.filament_spool_price
+    
+    // Calculate wear and tear cost
+    const wearTearCost = filamentCost * (settings.wear_tear_markup / 100)
+    
+    // Calculate total cost (now including additional parts cost)
+    const totalCost = laborCost + filamentCost + wearTearCost + product.additional_parts_cost
+    
+    // Use list_price if set, otherwise calculate from markup
+    const sellingPrice = product.list_price > 0 
+      ? product.list_price 
+      : totalCost * (1 + settings.desired_markup / 100)
+    
+    // Calculate platform fees
+    const platformFeeAmount = sellingPrice * (settings.platform_fees / 100)
+    
+    // Calculate gross profit
+    const grossProfit = sellingPrice - totalCost - platformFeeAmount
+    
+    // Calculate profit margin
+    const profitMargin = sellingPrice > 0 ? (grossProfit / sellingPrice) * 100 : 0
+    
+    return {
+      ...product,
+      labor_cost: laborCost,
+      filament_cost: filamentCost,
+      wear_tear_cost: wearTearCost,
+      total_cost: totalCost,
+      selling_price: sellingPrice,
+      platform_fee_amount: platformFeeAmount,
+      gross_profit: grossProfit,
+      profit_margin: profitMargin
+    }
+  }
+
+  const fetchSettings = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/settings`)
+      if (!response.ok) throw new Error('Failed to fetch settings')
+      const data = await response.json()
+      // Convert string values to numbers
+      const numericSettings = Object.entries(data).reduce((acc, [key, value]) => {
+        acc[key] = parseFloat(value as string) || 0
+        return acc
+      }, {} as typeof settings)
+      setSettings(numericSettings)
+    } catch (err) {
+      setError('Failed to load settings')
+    }
+  }
+
+  const updateSettings = async (newSettings: typeof settings) => {
+    try {
+      // Convert numbers to strings for API
+      const stringSettings = Object.entries(newSettings).reduce((acc, [key, value]) => {
+        acc[key] = value.toString()
+        return acc
+      }, {} as Record<string, string>)
+      
+      const response = await fetch(`${API_URL}/api/settings`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(stringSettings)
+      })
+      if (!response.ok) throw new Error('Failed to update settings')
+      const data = await response.json()
+      
+      // Convert string values back to numbers
+      const numericSettings = Object.entries(data).reduce((acc, [key, value]) => {
+        acc[key] = parseFloat(value as string) || 0
+        return acc
+      }, {} as typeof settings)
+      
+      setSettings(numericSettings)
+    } catch (err) {
+      setError('Failed to update settings')
     }
   }
 
@@ -294,6 +428,59 @@ function App() {
     }
   }
 
+  const handleAddProduct = async (product: ProductFormData) => {
+    try {
+      const response = await fetch(`${API_URL}/api/products`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(product)
+      })
+      
+      if (!response.ok) throw new Error('Failed to add product')
+      
+      await fetchProducts()
+      setIsAddingProduct(false)
+    } catch (err) {
+      setError('Failed to add product')
+    }
+  }
+  
+  const handleUpdateProduct = async (product: Product) => {
+    try {
+      const response = await fetch(`${API_URL}/api/products/${product.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(product)
+      })
+      
+      if (!response.ok) throw new Error('Failed to update product')
+      
+      await fetchProducts()
+    } catch (err) {
+      setError('Failed to update product')
+    }
+  }
+  
+  const handleDeleteProduct = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this product?')) return
+    
+    try {
+      const response = await fetch(`${API_URL}/api/products/${id}`, {
+        method: 'DELETE'
+      })
+      
+      if (!response.ok) throw new Error('Failed to delete product')
+      
+      await fetchProducts()
+    } catch (err) {
+      setError('Failed to delete product')
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white p-8 font-mono">
@@ -310,7 +497,6 @@ function App() {
             <div className="w-1/4">
               <div className="flex flex-col sm:flex-row sm:items-baseline space-y-2 sm:space-y-0 sm:space-x-4">
                 <h1 className="text-2xl font-medium tracking-wider text-white">SIMS TERMINAL v1.0</h1>
-                <div className="text-xs text-gray-300">SPOOL INVENTORY MANAGEMENT SYSTEM</div>
               </div>
             </div>
             <div className="flex justify-center w-1/2">
@@ -333,16 +519,26 @@ function App() {
                 >
                   PRINTERS
                 </button>
+                <button
+                  onClick={() => setActiveView('products')}
+                  className={`w-auto px-4 py-2 border border-black rounded-none text-xs font-bold text-white ${activeView === 'products' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'} focus:outline-none focus:ring-1 focus:ring-black transition-colors uppercase tracking-wider`}
+                >
+                  PRODUCTS
+                </button>
               </div>
             </div>
             <div className="w-1/4 flex justify-end">
               <div className="flex space-x-2">
                 {activeView !== 'printers' && (
                   <button
-                    onClick={() => activeView === 'parts' ? setIsAddingPart(true) : setIsAddingFilament(true)}
+                    onClick={() => {
+                      if (activeView === 'parts') setIsAddingPart(true)
+                      else if (activeView === 'filaments') setIsAddingFilament(true)
+                      else if (activeView === 'products') setIsAddingProduct(true)
+                    }}
                     className="w-full sm:w-auto px-4 py-2 border border-black rounded-none text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-1 focus:ring-black transition-colors uppercase tracking-wider"
                   >
-                    NEW {activeView === 'parts' ? 'PART' : 'RECORD'}
+                    NEW {activeView === 'parts' ? 'PART' : activeView === 'products' ? 'PRODUCT' : 'RECORD'}
                   </button>
                 )}
               </div>
@@ -368,16 +564,41 @@ function App() {
             <PartForm
               isOpen={isAddingPart}
               printers={printers.filter(p => p.id !== undefined) as { id: number; name: string }[]}
-              onSubmit={(part) => {
-                handleAddPart(part);
-                setIsAddingPart(false);
-              }}
+              onSubmit={handleAddPart}
               onClose={() => setIsAddingPart(false)}
             />
           )}
 
+          {isAddingProduct && activeView === 'products' && (
+            <ProductForm
+              product={null}
+              isOpen={isAddingProduct}
+              onSubmit={handleAddProduct}
+              onClose={() => setIsAddingProduct(false)}
+              hourlyRate={settings.hourly_rate}
+              wearTearPercentage={settings.wear_tear_markup}
+              desiredMarkup={settings.desired_markup}
+              platformFees={settings.platform_fees}
+              filamentSpoolPrice={settings.filament_spool_price}
+            />
+          )}
+
+          {editingProduct && (
+            <ProductForm
+              product={editingProduct}
+              isOpen={!!editingProduct}
+              onSubmit={handleUpdateProduct}
+              onClose={() => setEditingProduct(null)}
+              hourlyRate={settings.hourly_rate}
+              wearTearPercentage={settings.wear_tear_markup}
+              desiredMarkup={settings.desired_markup}
+              platformFees={settings.platform_fees}
+              filamentSpoolPrice={settings.filament_spool_price}
+            />
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-            <div className="lg:col-span-3">
+            <div className={`${activeView === 'products' ? 'lg:col-span-4' : 'lg:col-span-3'}`}>
               {activeView === 'parts' && (
                 <PartList
                   parts={parts}
@@ -401,25 +622,45 @@ function App() {
                   onAdd={handleAddPrinter}
                 />
               )}
+              {activeView === 'products' && (
+                <div className="flex flex-col space-y-4">
+                  <ProductList
+                    products={products}
+                    onUpdate={handleUpdateProduct}
+                    onDelete={handleDeleteProduct}
+                    onAdd={() => setIsAddingProduct(true)}
+                    hourlyRate={settings.hourly_rate}
+                    wearTearPercentage={settings.wear_tear_markup}
+                    desiredMarkup={settings.desired_markup}
+                    platformFees={settings.platform_fees}
+                    filamentSpoolPrice={settings.filament_spool_price}
+                    onUpdateSettings={updateSettings}
+                  />
+                </div>
+              )}
             </div>
             <div>
-              <PrintQueue
-                items={queueItems}
-                printers={printers}
-                filaments={filaments}
-                onAdd={handleAddQueueItem}
-                onUpdate={handleUpdateQueueItem}
-                onDelete={handleDeleteQueueItem}
-              />
-              <div className="mt-4">
-                <PurchaseList
-                  items={purchaseItems}
-                  filaments={filaments}
-                  onAdd={handleAddPurchaseItem}
-                  onUpdate={handleUpdatePurchaseItem}
-                  onDelete={handleDeletePurchaseItem}
-                />
-              </div>
+              {activeView === 'filaments' && (
+                <>
+                  <PrintQueue
+                    items={queueItems}
+                    printers={printers}
+                    filaments={filaments}
+                    onAdd={handleAddQueueItem}
+                    onUpdate={handleUpdateQueueItem}
+                    onDelete={handleDeleteQueueItem}
+                  />
+                  <div className="mt-4">
+                    <PurchaseList
+                      items={purchaseItems}
+                      filaments={filaments}
+                      onAdd={handleAddPurchaseItem}
+                      onUpdate={handleUpdatePurchaseItem}
+                      onDelete={handleDeletePurchaseItem}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -687,4 +687,181 @@ app.delete('/api/parts/:id', async (req, res) => {
   }
 });
 
+// Products API endpoints
+app.get('/api/products', async (req, res) => {
+  try {
+    const products = await db.all('SELECT * FROM products ORDER BY name');
+    res.json(products);
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    res.status(500).json({ error: 'Failed to fetch products' });
+  }
+});
+
+app.get('/api/products/:id', async (req, res) => {
+  try {
+    const product = await db.get('SELECT * FROM products WHERE id = ?', req.params.id);
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+    res.json(product);
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    res.status(500).json({ error: 'Failed to fetch product' });
+  }
+});
+
+app.post('/api/products', async (req, res) => {
+  try {
+    const {
+      name,
+      business,
+      filament_used,
+      print_prep_time,
+      post_processing_time,
+      additional_parts_cost,
+      list_price,
+      notes
+    } = req.body;
+
+    const result = await db.run(
+      `INSERT INTO products (
+        name,
+        business,
+        filament_used,
+        print_prep_time,
+        post_processing_time,
+        additional_parts_cost,
+        list_price,
+        notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        name,
+        business,
+        filament_used,
+        print_prep_time,
+        post_processing_time,
+        additional_parts_cost,
+        list_price,
+        notes
+      ]
+    );
+
+    const newProduct = await db.get('SELECT * FROM products WHERE id = ?', result.lastID);
+    res.status(201).json(newProduct);
+  } catch (error) {
+    console.error('Error creating product:', error);
+    res.status(500).json({ error: 'Failed to create product' });
+  }
+});
+
+app.put('/api/products/:id', async (req, res) => {
+  try {
+    const {
+      name,
+      business,
+      filament_used,
+      print_prep_time,
+      post_processing_time,
+      additional_parts_cost,
+      list_price,
+      notes
+    } = req.body;
+
+    await db.run(
+      `UPDATE products SET
+        name = ?,
+        business = ?,
+        filament_used = ?,
+        print_prep_time = ?,
+        post_processing_time = ?,
+        additional_parts_cost = ?,
+        list_price = ?,
+        notes = ?
+      WHERE id = ?`,
+      [
+        name,
+        business,
+        filament_used,
+        print_prep_time,
+        post_processing_time,
+        additional_parts_cost,
+        list_price,
+        notes,
+        req.params.id
+      ]
+    );
+
+    const updatedProduct = await db.get('SELECT * FROM products WHERE id = ?', req.params.id);
+    if (!updatedProduct) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+    res.json(updatedProduct);
+  } catch (error) {
+    console.error('Error updating product:', error);
+    res.status(500).json({ error: 'Failed to update product' });
+  }
+});
+
+app.delete('/api/products/:id', async (req, res) => {
+  try {
+    const product = await db.get('SELECT * FROM products WHERE id = ?', req.params.id);
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    await db.run('DELETE FROM products WHERE id = ?', req.params.id);
+    res.json({ message: 'Product deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    res.status(500).json({ error: 'Failed to delete product' });
+  }
+});
+
+// Settings endpoints
+app.get('/api/settings', async (req, res) => {
+  try {
+    const settings = await db.all('SELECT key, value FROM settings');
+    const settingsObject = settings.reduce((acc, setting) => {
+      acc[setting.key] = setting.value;
+      return acc;
+    }, {});
+    res.json(settingsObject);
+  } catch (error) {
+    console.error('Error fetching settings:', error);
+    res.status(500).json({ error: 'Failed to fetch settings' });
+  }
+});
+
+app.put('/api/settings', async (req, res) => {
+  try {
+    const settings = req.body;
+    
+    // Validate settings
+    if (!settings || typeof settings !== 'object') {
+      return res.status(400).json({ error: 'Invalid settings data' });
+    }
+    
+    // Update each setting
+    for (const [key, value] of Object.entries(settings)) {
+      await db.run(
+        'UPDATE settings SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?',
+        value, key
+      );
+    }
+    
+    // Return updated settings
+    const updatedSettings = await db.all('SELECT key, value FROM settings');
+    const settingsObject = updatedSettings.reduce((acc, setting) => {
+      acc[setting.key] = setting.value;
+      return acc;
+    }, {});
+    
+    res.json(settingsObject);
+  } catch (error) {
+    console.error('Error updating settings:', error);
+    res.status(500).json({ error: 'Failed to update settings' });
+  }
+});
+
 export default app;

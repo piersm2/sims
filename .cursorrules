@@ -1,1 +1,3 @@
 - Don't output or run Docker commands unless explicitly asked to.
+- Don't run migrations in chat/agent. They get run automatically on server start.
+- Don't start servers in chat/agent. I'll do it myself in my own terminal.
