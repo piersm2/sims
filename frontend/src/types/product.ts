@@ -1,3 +1,5 @@
+import { Filament } from './filament';
+
 export interface Product {
   id?: number;
   name: string;
@@ -10,6 +12,7 @@ export interface Product {
   notes?: string;
   created_at?: string;
   updated_at?: string;
+  filaments?: Filament[]; // Associated filaments
 }
 
 export interface ProductCalculations {

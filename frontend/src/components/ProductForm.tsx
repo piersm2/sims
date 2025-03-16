@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Product, ProductFormData } from '../types/product';
+import { Filament } from '../types/filament';
+import FilamentSelector from './FilamentSelector';
 
 interface ProductFormProps {
   product: Product | null;
@@ -47,6 +49,8 @@ const ProductForm = ({
     markup_price: 0
   });
 
+  const [selectedFilaments, setSelectedFilaments] = useState<Filament[]>([]);
+
   useEffect(() => {
     if (product) {
       setFormData({
@@ -59,6 +63,11 @@ const ProductForm = ({
         list_price: product.list_price || 0,
         notes: product.notes || ''
       });
+      
+      // Set selected filaments if available
+      if (product.filaments) {
+        setSelectedFilaments(product.filaments);
+      }
     }
   }, [product]);
 
@@ -133,7 +142,13 @@ const ProductForm = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    // Include the product ID if editing an existing product
+    const submittedData = {
+      ...formData,
+      id: product?.id,
+      filaments: selectedFilaments
+    };
+    onSubmit(submittedData);
   };
 
   const formatCurrency = (amount: number) => {
@@ -151,10 +166,14 @@ const ProductForm = ({
     }).format(value / 100);
   };
 
+  const handleFilamentsChange = (filaments: Filament[]) => {
+    setSelectedFilaments(filaments);
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
       <div className="bg-white border-2 border-black p-4 max-w-4xl w-full max-h-screen overflow-y-auto">
         <div className="flex justify-between items-center mb-4 bg-black text-white p-2">
           <h2 className="text-lg font-medium tracking-wider uppercase">
@@ -322,6 +341,14 @@ const ProductForm = ({
                 <p>Using global settings: {formatPercent(desiredMarkup)} markup, {formatPercent(platformFees)} platform fees, ${filamentSpoolPrice.toFixed(2)}/kg filament</p>
               </div>
             </div>
+            
+            {product && product.id && (
+              <FilamentSelector
+                productId={product.id}
+                selectedFilaments={selectedFilaments}
+                onFilamentsChange={handleFilamentsChange}
+              />
+            )}
           </div>
           
           <div className="col-span-1 md:col-span-2 flex justify-end space-x-2 mt-4">
@@ -336,7 +363,7 @@ const ProductForm = ({
               type="submit"
               className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-2 rounded-none border border-black uppercase tracking-wider"
             >
-              Save
+              {product ? 'Update' : 'Create'} Product
             </button>
           </div>
         </form>

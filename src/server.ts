@@ -690,7 +690,22 @@ app.delete('/api/parts/:id', async (req, res) => {
 // Products API endpoints
 app.get('/api/products', async (req, res) => {
   try {
+    // Get all products
     const products = await db.all('SELECT * FROM products ORDER BY name');
+    
+    // For each product, get its associated filaments
+    for (const product of products) {
+      const filaments = await db.all(`
+        SELECT f.* 
+        FROM filaments f
+        JOIN product_filaments pf ON f.id = pf.filament_id
+        WHERE pf.product_id = ?
+        ORDER BY f.name
+      `, product.id);
+      
+      product.filaments = filaments;
+    }
+    
     res.json(products);
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -704,6 +719,19 @@ app.get('/api/products/:id', async (req, res) => {
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
     }
+    
+    // Get associated filaments
+    const filaments = await db.all(`
+      SELECT f.* 
+      FROM filaments f
+      JOIN product_filaments pf ON f.id = pf.filament_id
+      WHERE pf.product_id = ?
+      ORDER BY f.name
+    `, req.params.id);
+    
+    // Add filaments to the product object
+    product.filaments = filaments;
+    
     res.json(product);
   } catch (error) {
     console.error('Error fetching product:', error);
@@ -815,6 +843,94 @@ app.delete('/api/products/:id', async (req, res) => {
   } catch (error) {
     console.error('Error deleting product:', error);
     res.status(500).json({ error: 'Failed to delete product' });
+  }
+});
+
+// Product-Filament relationship endpoints
+app.get('/api/products/:id/filaments', async (req, res) => {
+  try {
+    const filaments = await db.all(`
+      SELECT f.* 
+      FROM filaments f
+      JOIN product_filaments pf ON f.id = pf.filament_id
+      WHERE pf.product_id = ?
+      ORDER BY f.name
+    `, req.params.id);
+    
+    res.json(filaments);
+  } catch (error) {
+    console.error('Error fetching product filaments:', error);
+    res.status(500).json({ error: 'Failed to fetch product filaments' });
+  }
+});
+
+app.post('/api/products/:id/filaments', async (req, res) => {
+  try {
+    const { filament_id } = req.body;
+    
+    if (!filament_id) {
+      return res.status(400).json({ error: 'Filament ID is required' });
+    }
+    
+    // Check if product exists
+    const product = await db.get('SELECT * FROM products WHERE id = ?', req.params.id);
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+    
+    // Check if filament exists
+    const filament = await db.get('SELECT * FROM filaments WHERE id = ?', filament_id);
+    if (!filament) {
+      return res.status(404).json({ error: 'Filament not found' });
+    }
+    
+    // Check if relationship already exists
+    const existing = await db.get(
+      'SELECT * FROM product_filaments WHERE product_id = ? AND filament_id = ?',
+      req.params.id, filament_id
+    );
+    
+    if (existing) {
+      return res.status(409).json({ error: 'Filament already associated with this product' });
+    }
+    
+    // Add the relationship
+    await db.run(
+      'INSERT INTO product_filaments (product_id, filament_id) VALUES (?, ?)',
+      req.params.id, filament_id
+    );
+    
+    res.status(201).json({ message: 'Filament added to product successfully' });
+  } catch (error) {
+    console.error('Error adding filament to product:', error);
+    res.status(500).json({ error: 'Failed to add filament to product' });
+  }
+});
+
+app.delete('/api/products/:productId/filaments/:filamentId', async (req, res) => {
+  try {
+    const { productId, filamentId } = req.params;
+    
+    // Check if relationship exists
+    const relationship = await db.get(
+      'SELECT * FROM product_filaments WHERE product_id = ? AND filament_id = ?',
+      productId, filamentId
+    );
+    
+    if (!relationship) {
+      return res.status(404).json({ error: 'Relationship not found' });
+    }
+    
+    // Remove the relationship
+    await db.run(
+      'DELETE FROM product_filaments WHERE product_id = ? AND filament_id = ?',
+      productId, filamentId
+    );
+    
+    res.json({ message: 'Filament removed from product successfully' });
+  } catch (error) {
+    console.error('Error removing filament from product:', error);
+    res.status(500).json({ error: 'Failed to remove filament from product' });
   }
 });
 

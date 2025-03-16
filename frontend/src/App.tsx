@@ -127,6 +127,10 @@ function App() {
       
       // Calculate profit margins for each product
       const productsWithCalculations = data.map((product: Product) => {
+        // Ensure filaments property exists even if it's not in the API response
+        if (!product.filaments) {
+          product.filaments = [];
+        }
         return calculateProductMargins(product)
       })
       
@@ -449,21 +453,35 @@ function App() {
   
   const handleUpdateProduct = async (product: Product) => {
     try {
+      // First update the product basic info
       const response = await fetch(`${API_URL}/api/products/${product.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(product)
-      })
+        // Only send the product data without filaments to the update endpoint
+        body: JSON.stringify({
+          name: product.name,
+          business: product.business,
+          filament_used: product.filament_used,
+          print_prep_time: product.print_prep_time,
+          post_processing_time: product.post_processing_time,
+          additional_parts_cost: product.additional_parts_cost,
+          list_price: product.list_price,
+          notes: product.notes
+        })
+      });
       
-      if (!response.ok) throw new Error('Failed to update product')
+      if (!response.ok) throw new Error('Failed to update product');
       
-      await fetchProducts()
+      // Filaments are managed through the dedicated endpoints in the FilamentSelector component
+      // so we don't need to update them here
+      
+      await fetchProducts();
     } catch (err) {
-      setError('Failed to update product')
+      setError('Failed to update product');
     }
-  }
+  };
   
   const handleDeleteProduct = async (id: number) => {
     if (!confirm('Are you sure you want to delete this product?')) return

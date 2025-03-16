@@ -116,13 +116,34 @@ const ProductList = ({
     }).format(value / 100);
   };
 
-  const handleEdit = (product: Product) => {
-    setEditingProduct(product);
-    setIsEditModalOpen(true);
+  const handleEdit = async (product: Product) => {
+    try {
+      // Fetch the product with its filaments
+      const response = await fetch(`${API_URL}/api/products/${product.id}`);
+      if (!response.ok) throw new Error('Failed to fetch product details');
+      
+      const productWithFilaments = await response.json();
+      
+      // Set the product with filaments for editing
+      setEditingProduct(productWithFilaments);
+      setIsEditModalOpen(true);
+    } catch (error) {
+      console.error('Error fetching product details:', error);
+      // Fallback to using the product without filaments
+      setEditingProduct(product);
+      setIsEditModalOpen(true);
+    }
   };
 
-  const handleEditSubmit = (product: Product) => {
-    onUpdate(product);
+  const handleEditSubmit = (productData: any) => {
+    // Make sure we're passing the complete product with filaments to the update function
+    const updatedProduct = {
+      ...productData,
+      // Ensure the ID is preserved
+      id: editingProduct?.id
+    };
+    
+    onUpdate(updatedProduct);
     setIsEditModalOpen(false);
     setEditingProduct(null);
   };
@@ -321,6 +342,9 @@ const ProductList = ({
               <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer" onClick={() => handleSort('filament_used')}>
                 Filament {getSortIcon('filament_used')}
               </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                Filaments
+              </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer" onClick={() => handleSort('labor_cost')}>
                 Labor {getSortIcon('labor_cost')}
               </th>
@@ -353,6 +377,22 @@ const ProductList = ({
                 <td className="px-4 py-3 text-sm">{product.name}</td>
                 <td className="px-4 py-3 text-sm">{product.business}</td>
                 <td className="px-4 py-3 text-sm">{product.filament_used}g</td>
+                <td className="px-4 py-3 text-sm">
+                  {product.filaments && product.filaments.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {product.filaments.map(filament => (
+                        <div 
+                          key={filament.id} 
+                          className="h-4 w-4 border border-black cursor-help"
+                          style={{ backgroundColor: filament.color }}
+                          title={`${filament.name} - ${filament.material} - ${filament.color}${filament.manufacturer ? ` - ${filament.manufacturer}` : ''}`}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">None</span>
+                  )}
+                </td>
                 <td className="px-4 py-3 text-sm">{formatCurrency(product.labor_cost)}</td>
                 <td className="px-4 py-3 text-sm">{formatCurrency(product.filament_cost)}</td>
                 <td className="px-4 py-3 text-sm">{formatCurrency(product.total_cost)}</td>

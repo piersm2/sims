@@ -3,3 +3,4 @@
 
 -- Include initial schema
 .read migrations/001_initial_schema.sql 
+.read migrations/018_add_product_filaments.sql 
