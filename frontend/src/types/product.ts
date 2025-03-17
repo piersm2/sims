@@ -24,6 +24,7 @@ export interface ProductCalculations {
   platform_fee_amount: number;
   gross_profit: number;
   profit_margin: number;
+  advertising_budget: number; // Maximum amount that can be spent on advertising while maintaining desired profit margin
 }
 
 export type ProductWithCalculations = Product & ProductCalculations;

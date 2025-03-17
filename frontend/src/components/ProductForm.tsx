@@ -10,9 +10,10 @@ interface ProductFormProps {
   onClose: () => void;
   hourlyRate: number;
   wearTearPercentage: number;
-  desiredMarkup: number;
-  platformFees: number;
-  filamentSpoolPrice: number;
+  desiredMarkup?: number;
+  platformFees?: number;
+  filamentSpoolPrice?: number;
+  desiredProfitMargin?: number;
 }
 
 const ProductForm = ({
@@ -22,9 +23,10 @@ const ProductForm = ({
   onClose,
   hourlyRate,
   wearTearPercentage,
-  desiredMarkup,
-  platformFees,
-  filamentSpoolPrice
+  desiredMarkup = 0,
+  platformFees = 0,
+  filamentSpoolPrice = 18,
+  desiredProfitMargin = 55
 }: ProductFormProps) => {
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
@@ -46,7 +48,8 @@ const ProductForm = ({
     platform_fee_amount: 0,
     gross_profit: 0,
     profit_margin: 0,
-    markup_price: 0
+    markup_price: 0,
+    advertising_budget: 0
   });
 
   const [selectedFilaments, setSelectedFilaments] = useState<Filament[]>([]);
@@ -73,7 +76,7 @@ const ProductForm = ({
 
   useEffect(() => {
     calculateProfitMargin();
-  }, [formData, hourlyRate, wearTearPercentage, desiredMarkup, platformFees, filamentSpoolPrice]);
+  }, [formData, hourlyRate, wearTearPercentage, desiredMarkup, platformFees, filamentSpoolPrice, desiredProfitMargin]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -127,6 +130,21 @@ const ProductForm = ({
     // Calculate profit margin
     const profitMargin = sellingPrice > 0 ? (grossProfit / sellingPrice) * 100 : 0;
     
+    // Calculate advertising budget - how much can be spent on ads while maintaining desired profit margin
+    // The current profit margin is (grossProfit / sellingPrice) * 100
+    // If we want to reduce this to the desired profit margin, we need to calculate how much profit we can give up
+    // while still maintaining the desired margin
+
+    // Calculate maximum allowable ad spend while maintaining desired profit margin
+    let advertisingBudget = 0;
+    if (profitMargin > desiredProfitMargin) {
+      // Current profit is higher than desired, so we can spend some on ads
+      // Calculate what the profit would be at the desired margin
+      const profitAtDesiredMargin = (sellingPrice * desiredProfitMargin) / 100;
+      // The difference is what we can spend on ads
+      advertisingBudget = grossProfit - profitAtDesiredMargin;
+    }
+    
     setCalculations({
       labor_cost: laborCost,
       filament_cost: filamentCost,
@@ -136,7 +154,8 @@ const ProductForm = ({
       platform_fee_amount: platformFeeAmount,
       gross_profit: grossProfit,
       profit_margin: profitMargin,
-      markup_price: markupPrice
+      markup_price: markupPrice,
+      advertising_budget: advertisingBudget
     });
   };
 
@@ -336,9 +355,13 @@ const ProductForm = ({
                   <span className="text-xs text-gray-600 uppercase">Profit Margin:</span>
                   <p className="font-semibold">{formatPercent(calculations.profit_margin)}</p>
                 </div>
+                <div>
+                  <span className="text-xs text-gray-600 uppercase">Ad Budget:</span>
+                  <p className="font-semibold">{formatCurrency(calculations.advertising_budget)}</p>
+                </div>
               </div>
               <div className="mt-2 text-xs text-gray-500">
-                <p>Using global settings: {formatPercent(desiredMarkup)} markup, {formatPercent(platformFees)} platform fees, ${filamentSpoolPrice.toFixed(2)}/kg filament</p>
+                <p>Using global settings: {formatPercent(desiredMarkup)} markup, {formatPercent(platformFees)} platform fees, ${filamentSpoolPrice.toFixed(2)}/kg filament, {formatPercent(desiredProfitMargin)} desired profit margin</p>
               </div>
             </div>
             

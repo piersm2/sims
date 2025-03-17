@@ -12,6 +12,7 @@ interface ProductListProps {
   desiredMarkup?: number;
   platformFees?: number;
   filamentSpoolPrice?: number;
+  desiredProfitMargin?: number;
   onUpdateSettings?: (settings: any) => void;
 }
 
@@ -23,6 +24,7 @@ interface Settings {
   desired_markup: number;
   platform_fees: number;
   filament_spool_price: number;
+  desired_profit_margin: number;
   [key: string]: number;
 }
 
@@ -35,6 +37,7 @@ const ProductList = ({
   desiredMarkup = 0,
   platformFees = 0,
   filamentSpoolPrice = 18,
+  desiredProfitMargin = 55,
   onUpdateSettings
 }: ProductListProps) => {
   const [sortField, setSortField] = useState<keyof ProductWithCalculations>('name');
@@ -50,7 +53,8 @@ const ProductList = ({
     wear_tear_markup: wearTearPercentage,
     desired_markup: desiredMarkup,
     platform_fees: platformFees,
-    filament_spool_price: filamentSpoolPrice
+    filament_spool_price: filamentSpoolPrice,
+    desired_profit_margin: desiredProfitMargin
   });
 
   // Update local settings when props change
@@ -61,9 +65,10 @@ const ProductList = ({
       wear_tear_markup: wearTearPercentage,
       desired_markup: desiredMarkup || 0,
       platform_fees: platformFees || 0,
-      filament_spool_price: filamentSpoolPrice || 18
+      filament_spool_price: filamentSpoolPrice || 18,
+      desired_profit_margin: desiredProfitMargin || 55
     });
-  }, [hourlyRate, wearTearPercentage, desiredMarkup, platformFees, filamentSpoolPrice]);
+  }, [hourlyRate, wearTearPercentage, desiredMarkup, platformFees, filamentSpoolPrice, desiredProfitMargin]);
 
   const handleSort = (field: keyof ProductWithCalculations) => {
     if (field === sortField) {
@@ -186,6 +191,7 @@ const ProductList = ({
           desiredMarkup={desiredMarkup}
           platformFees={platformFees}
           filamentSpoolPrice={filamentSpoolPrice}
+          desiredProfitMargin={settings.desired_profit_margin}
         />
       )}
 
@@ -199,91 +205,85 @@ const ProductList = ({
               </button>
             </div>
             <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center space-x-2">
-                  <div className="text-xs uppercase tracking-wider">Spool Weight (g):</div>
-                  <input
-                    type="number"
-                    value={settings.spool_weight}
-                    onChange={(e) => handleSettingsChange('spool_weight', parseFloat(e.target.value) || 0)}
-                    className="border border-black rounded-none text-xs p-1 w-16"
-                    min="0"
-                    step="1"
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="text-xs uppercase tracking-wider">Filament Markup (%):</div>
-                  <input
-                    type="number"
-                    value={settings.filament_markup}
-                    onChange={(e) => handleSettingsChange('filament_markup', parseFloat(e.target.value) || 0)}
-                    className="border border-black rounded-none text-xs p-1 w-16"
-                    min="0"
-                    step="0.1"
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="text-xs uppercase tracking-wider">Hourly Rate ($):</div>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-1">
+                    Hourly Rate
+                  </label>
                   <input
                     type="number"
                     value={settings.hourly_rate}
                     onChange={(e) => handleSettingsChange('hourly_rate', parseFloat(e.target.value) || 0)}
-                    className="border border-black rounded-none text-xs p-1 w-16"
-                    min="0"
-                    step="0.01"
+                    className="w-full p-2 border border-gray-300 focus:ring-black focus:border-black"
                   />
                 </div>
-                <div className="flex items-center space-x-2">
-                  <div className="text-xs uppercase tracking-wider">Wear & Tear (%):</div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-1">
+                    Wear & Tear Markup (%)
+                  </label>
                   <input
                     type="number"
                     value={settings.wear_tear_markup}
                     onChange={(e) => handleSettingsChange('wear_tear_markup', parseFloat(e.target.value) || 0)}
-                    className="border border-black rounded-none text-xs p-1 w-16"
-                    min="0"
-                    step="0.1"
+                    className="w-full p-2 border border-gray-300 focus:ring-black focus:border-black"
                   />
                 </div>
-                <div className="flex items-center space-x-2">
-                  <div className="text-xs uppercase tracking-wider">Desired Markup (%):</div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-1">
+                    Desired Markup (%)
+                  </label>
                   <input
                     type="number"
                     value={settings.desired_markup}
                     onChange={(e) => handleSettingsChange('desired_markup', parseFloat(e.target.value) || 0)}
-                    className="border border-black rounded-none text-xs p-1 w-16"
-                    min="0"
-                    step="1"
+                    className="w-full p-2 border border-gray-300 focus:ring-black focus:border-black"
                   />
                 </div>
-                <div className="flex items-center space-x-2">
-                  <div className="text-xs uppercase tracking-wider">Platform Fees (%):</div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-1">
+                    Desired Profit Margin (%)
+                  </label>
+                  <input
+                    type="number"
+                    value={settings.desired_profit_margin}
+                    onChange={(e) => handleSettingsChange('desired_profit_margin', parseFloat(e.target.value) || 0)}
+                    className="w-full p-2 border border-gray-300 focus:ring-black focus:border-black"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    This is used to calculate the maximum advertising budget per product while maintaining this profit margin.
+                    The ad budget is calculated as: (Current Profit) - (Profit at Desired Margin), where Profit at Desired Margin = List Price × Desired Margin %.
+                    Products with profit margins above this threshold will show available ad budget, while those below will show $0.
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-1">
+                    Platform Fees (%)
+                  </label>
                   <input
                     type="number"
                     value={settings.platform_fees}
                     onChange={(e) => handleSettingsChange('platform_fees', parseFloat(e.target.value) || 0)}
-                    className="border border-black rounded-none text-xs p-1 w-16"
-                    min="0"
-                    step="0.1"
+                    className="w-full p-2 border border-gray-300 focus:ring-black focus:border-black"
                   />
                 </div>
-                <div className="flex items-center space-x-2">
-                  <div className="text-xs uppercase tracking-wider">Filament Spool Price ($):</div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-1">
+                    Filament Spool Price ($)
+                  </label>
                   <input
                     type="number"
                     value={settings.filament_spool_price}
                     onChange={(e) => handleSettingsChange('filament_spool_price', parseFloat(e.target.value) || 0)}
-                    className="border border-black rounded-none text-xs p-1 w-16"
-                    min="0"
-                    step="0.01"
+                    className="w-full p-2 border border-gray-300 focus:ring-black focus:border-black"
                   />
                 </div>
               </div>
-              <div className="mt-6 flex justify-end">
+              <div className="mt-4 flex justify-end">
                 <button
                   onClick={handleSaveSettings}
-                  className="px-4 py-2 border border-black text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors uppercase tracking-wider"
+                  className="px-4 py-2 bg-black text-white hover:bg-gray-800"
                 >
-                  SAVE SETTINGS
+                  Save Settings
                 </button>
               </div>
             </div>
@@ -464,6 +464,9 @@ const ProductList = ({
                 Markup
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                Advertising Budget
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -498,6 +501,7 @@ const ProductList = ({
                 <td className="px-4 py-3 text-sm">{formatCurrency(product.gross_profit)}</td>
                 <td className="px-4 py-3 text-sm">{formatPercent(product.profit_margin)}</td>
                 <td className="px-4 py-3 text-sm">{formatPercent(calculateMarkup(product.list_price, product.total_cost))}</td>
+                <td className="px-4 py-3 text-sm">{formatCurrency(product.advertising_budget)}</td>
                 <td className="px-4 py-3 text-sm">
                   <div className="flex space-x-2">
                     <button

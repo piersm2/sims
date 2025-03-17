@@ -43,6 +43,7 @@ function App() {
     desired_markup: number;
     platform_fees: number;
     filament_spool_price: number;
+    desired_profit_margin: number;
     [key: string]: number;
   }
 
@@ -53,7 +54,8 @@ function App() {
     wear_tear_markup: 5,
     desired_markup: 150,
     platform_fees: 7,
-    filament_spool_price: 18
+    filament_spool_price: 18,
+    desired_profit_margin: 55
   })
 
   useEffect(() => {
@@ -182,6 +184,23 @@ function App() {
     // Calculate profit margin
     const profitMargin = sellingPrice > 0 ? (grossProfit / sellingPrice) * 100 : 0
     
+    // Calculate advertising budget - how much can be spent on ads while maintaining desired profit margin
+    const desiredProfitMargin = settings.desired_profit_margin || 55;
+
+    // The current profit margin is (grossProfit / sellingPrice) * 100
+    // If we want to reduce this to the desired profit margin, we need to calculate how much profit we can give up
+    // while still maintaining the desired margin
+
+    // Calculate maximum allowable ad spend while maintaining desired profit margin
+    let advertisingBudget = 0;
+    if (profitMargin > desiredProfitMargin) {
+      // Current profit is higher than desired, so we can spend some on ads
+      // Calculate what the profit would be at the desired margin
+      const profitAtDesiredMargin = (sellingPrice * desiredProfitMargin) / 100;
+      // The difference is what we can spend on ads
+      advertisingBudget = grossProfit - profitAtDesiredMargin;
+    }
+    
     return {
       ...product,
       labor_cost: laborCost,
@@ -191,7 +210,8 @@ function App() {
       selling_price: sellingPrice,
       platform_fee_amount: platformFeeAmount,
       gross_profit: grossProfit,
-      profit_margin: profitMargin
+      profit_margin: profitMargin,
+      advertising_budget: advertisingBudget
     }
   }
 
@@ -643,6 +663,7 @@ function App() {
               desiredMarkup={settings.desired_markup}
               platformFees={settings.platform_fees}
               filamentSpoolPrice={settings.filament_spool_price}
+              desiredProfitMargin={settings.desired_profit_margin}
             />
           )}
 
@@ -657,6 +678,7 @@ function App() {
               desiredMarkup={settings.desired_markup}
               platformFees={settings.platform_fees}
               filamentSpoolPrice={settings.filament_spool_price}
+              desiredProfitMargin={settings.desired_profit_margin}
             />
           )}
 
@@ -697,6 +719,7 @@ function App() {
                       desiredMarkup={settings.desired_markup}
                       platformFees={settings.platform_fees}
                       filamentSpoolPrice={settings.filament_spool_price}
+                      desiredProfitMargin={settings.desired_profit_margin}
                       onUpdateSettings={updateSettings}
                     />
                   </div>
