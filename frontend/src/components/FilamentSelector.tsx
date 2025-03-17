@@ -15,6 +15,7 @@ const FilamentSelector = ({ productId, selectedFilaments, onFilamentsChange }: F
   const [isFilamentDropdownOpen, setIsFilamentDropdownOpen] = useState(false);
   const [filamentSearch, setFilamentSearch] = useState('');
   const filamentDropdownRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch all filaments
   useEffect(() => {
@@ -36,6 +37,16 @@ const FilamentSelector = ({ productId, selectedFilaments, onFilamentsChange }: F
 
     fetchFilaments();
   }, []);
+
+  // Focus search input when dropdown opens
+  useEffect(() => {
+    if (isFilamentDropdownOpen && searchInputRef.current) {
+      // Small timeout to ensure the input is rendered before focusing
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 10);
+    }
+  }, [isFilamentDropdownOpen]);
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -192,6 +203,7 @@ const FilamentSelector = ({ productId, selectedFilaments, onFilamentsChange }: F
                  top: filamentDropdownRef.current ? filamentDropdownRef.current.getBoundingClientRect().bottom + window.scrollY : 0
                }}>
             <input
+              ref={searchInputRef}
               type="text"
               value={filamentSearch}
               onChange={(e) => setFilamentSearch(e.target.value)}
