@@ -257,6 +257,7 @@ const ProductForm = ({
                 onChange={handleChange}
                 className="mt-1 block w-full border border-black rounded-none p-2 text-sm"
                 min="0"
+                step="0.1"
                 required
               />
             </div>
@@ -270,6 +271,7 @@ const ProductForm = ({
                 onChange={handleChange}
                 className="mt-1 block w-full border border-black rounded-none p-2 text-sm"
                 min="0"
+                step="0.1"
                 required
               />
             </div>
