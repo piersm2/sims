@@ -327,6 +327,82 @@ const ProductList = ({
         </div>
       </div>
 
+      <div className="bg-gray-50 border-b-2 border-black px-4 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Average Profit Margin */}
+          <div className="bg-white border-2 border-black p-4">
+            <div className="text-xs uppercase tracking-wider font-bold mb-1">Avg. Profit Margin</div>
+            <div className="text-2xl font-bold">
+              {formatPercent(products.reduce((sum, product) => sum + product.profit_margin, 0) / (products.length || 1))}
+            </div>
+            <div className="text-xs text-gray-500 mt-1">Across all products</div>
+          </div>
+          
+          {/* Average List Price */}
+          <div className="bg-white border-2 border-black p-4">
+            <div className="text-xs uppercase tracking-wider font-bold mb-1">Avg. List Price</div>
+            <div className="text-2xl font-bold">
+              {formatCurrency(products.reduce((sum, product) => sum + product.list_price, 0) / (products.length || 1))}
+            </div>
+            <div className="text-xs text-gray-500 mt-1">Across all products</div>
+          </div>
+          
+          {/* Average Gross Profit */}
+          <div className="bg-white border-2 border-black p-4">
+            <div className="text-xs uppercase tracking-wider font-bold mb-1">Avg. Gross Profit</div>
+            <div className="text-2xl font-bold">
+              {formatCurrency(products.reduce((sum, product) => sum + product.gross_profit, 0) / (products.length || 1))}
+            </div>
+            <div className="text-xs text-gray-500 mt-1">Per product</div>
+          </div>
+          
+          {/* Unique Filaments Used */}
+          <div className="bg-white border-2 border-black p-4">
+            <div className="text-xs uppercase tracking-wider font-bold mb-1">Unique Filaments</div>
+            <div className="flex items-center">
+              <div className="text-2xl font-bold mr-2">
+                {(() => {
+                  const uniqueFilaments = new Map();
+                  products.forEach(product => {
+                    if (product.filaments && product.filaments.length > 0) {
+                      product.filaments.forEach(filament => {
+                        if (filament.id && !uniqueFilaments.has(filament.id)) {
+                          uniqueFilaments.set(filament.id, filament);
+                        }
+                      });
+                    }
+                  });
+                  return uniqueFilaments.size;
+                })()}
+              </div>
+              <div className="flex flex-wrap gap-0.5 items-center">
+                {(() => {
+                  const uniqueFilaments = new Map();
+                  products.forEach(product => {
+                    if (product.filaments && product.filaments.length > 0) {
+                      product.filaments.forEach(filament => {
+                        if (filament.id && !uniqueFilaments.has(filament.id)) {
+                          uniqueFilaments.set(filament.id, filament);
+                        }
+                      });
+                    }
+                  });
+                  return Array.from(uniqueFilaments.values()).map(filament => (
+                    <div 
+                      key={filament.id} 
+                      className="h-2.5 w-2.5 border border-black cursor-help"
+                      style={{ backgroundColor: filament.color }}
+                      title={`${filament.name} - ${filament.material} - ${filament.color}${filament.manufacturer ? ` - ${filament.manufacturer}` : ''}`}
+                    />
+                  ));
+                })()}
+              </div>
+            </div>
+            <div className="text-xs text-gray-500 mt-1">Distinct filaments used</div>
+          </div>
+        </div>
+      </div>
+
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y-2 divide-black">
           <thead className="bg-black">
