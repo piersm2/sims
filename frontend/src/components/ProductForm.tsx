@@ -13,6 +13,7 @@ interface ProductFormProps {
   platformFees?: number;
   filamentSpoolPrice?: number;
   desiredProfitMargin?: number;
+  packagingCost?: number;
 }
 
 const ProductForm = ({
@@ -24,7 +25,8 @@ const ProductForm = ({
   wearTearPercentage,
   platformFees = 0,
   filamentSpoolPrice = 18,
-  desiredProfitMargin = 55
+  desiredProfitMargin = 55,
+  packagingCost = 0.5
 }: ProductFormProps) => {
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
@@ -74,7 +76,7 @@ const ProductForm = ({
 
   useEffect(() => {
     calculateProfitMargin();
-  }, [formData, hourlyRate, wearTearPercentage, platformFees, filamentSpoolPrice, desiredProfitMargin]);
+  }, [formData, hourlyRate, wearTearPercentage, platformFees, filamentSpoolPrice, desiredProfitMargin, packagingCost]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -108,8 +110,8 @@ const ProductForm = ({
     // Calculate wear and tear cost
     const wearTearCost = filamentCost * (wearTearPercentage / 100);
     
-    // Calculate total cost (including additional parts cost)
-    const totalCost = laborCost + filamentCost + wearTearCost + formData.additional_parts_cost;
+    // Calculate total cost (including additional parts cost and packaging cost)
+    const totalCost = laborCost + filamentCost + wearTearCost + formData.additional_parts_cost + packagingCost;
     
     // Calculate suggested price based on desired profit margin
     // Formula: price = cost / (1 - desiredMargin - platformFeePercent)
@@ -339,6 +341,10 @@ const ProductForm = ({
                   <p className="font-semibold">{formatCurrency(formData.additional_parts_cost)}</p>
                 </div>
                 <div>
+                  <span className="text-xs text-gray-600 uppercase">Packaging Cost:</span>
+                  <p className="font-semibold">{formatCurrency(packagingCost)}</p>
+                </div>
+                <div>
                   <span className="text-xs text-gray-600 uppercase">Total Cost:</span>
                   <p className="font-semibold">{formatCurrency(calculations.total_cost)}</p>
                 </div>
@@ -364,7 +370,7 @@ const ProductForm = ({
                 </div>
               </div>
               <div className="mt-2 text-xs text-gray-500">
-                <p>Using global settings: {formatPercent(desiredProfitMargin)} desired profit margin, {formatPercent(platformFees)} platform fees, ${filamentSpoolPrice.toFixed(2)}/kg filament</p>
+                <p>Using global settings: {formatPercent(desiredProfitMargin)} desired profit margin, {formatPercent(platformFees)} platform fees, ${filamentSpoolPrice.toFixed(2)}/kg filament, ${packagingCost.toFixed(2)} packaging cost</p>
               </div>
             </div>
             

@@ -12,6 +12,7 @@ interface ProductListProps {
   platformFees?: number;
   filamentSpoolPrice?: number;
   desiredProfitMargin?: number;
+  packagingCost?: number;
   onUpdateSettings?: (settings: any) => void;
 }
 
@@ -23,6 +24,7 @@ interface Settings {
   platform_fees: number;
   filament_spool_price: number;
   desired_profit_margin: number;
+  packaging_cost: number;
   [key: string]: number;
 }
 
@@ -35,6 +37,7 @@ const ProductList = ({
   platformFees = 0,
   filamentSpoolPrice = 18,
   desiredProfitMargin = 55,
+  packagingCost = 0.5,
   onUpdateSettings
 }: ProductListProps) => {
   const [sortField, setSortField] = useState<keyof ProductWithCalculations>('name');
@@ -50,7 +53,8 @@ const ProductList = ({
     wear_tear_markup: wearTearPercentage,
     platform_fees: platformFees,
     filament_spool_price: filamentSpoolPrice,
-    desired_profit_margin: desiredProfitMargin
+    desired_profit_margin: desiredProfitMargin,
+    packaging_cost: packagingCost
   });
 
   // Update local settings when props change
@@ -61,9 +65,10 @@ const ProductList = ({
       wear_tear_markup: wearTearPercentage,
       platform_fees: platformFees || 0,
       filament_spool_price: filamentSpoolPrice || 18,
-      desired_profit_margin: desiredProfitMargin || 55
+      desired_profit_margin: desiredProfitMargin || 55,
+      packaging_cost: packagingCost || 0.5
     });
-  }, [hourlyRate, wearTearPercentage, platformFees, filamentSpoolPrice, desiredProfitMargin]);
+  }, [hourlyRate, wearTearPercentage, platformFees, filamentSpoolPrice, desiredProfitMargin, packagingCost]);
 
   const handleSort = (field: keyof ProductWithCalculations) => {
     if (field === sortField) {
@@ -186,6 +191,7 @@ const ProductList = ({
           platformFees={settings.platform_fees}
           filamentSpoolPrice={settings.filament_spool_price}
           desiredProfitMargin={settings.desired_profit_margin}
+          packagingCost={settings.packaging_cost}
         />
       )}
 
@@ -257,6 +263,20 @@ const ProductList = ({
                     onChange={(e) => handleSettingsChange('filament_spool_price', parseFloat(e.target.value) || 0)}
                     className="w-full p-2 border border-gray-300 focus:ring-black focus:border-black"
                   />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-1">
+                    Packaging Cost ($)
+                  </label>
+                  <input
+                    type="number"
+                    value={settings.packaging_cost}
+                    onChange={(e) => handleSettingsChange('packaging_cost', parseFloat(e.target.value) || 0)}
+                    className="w-full p-2 border border-gray-300 focus:ring-black focus:border-black"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Cost of packaging per piece (default: $0.50)
+                  </p>
                 </div>
               </div>
               <div className="mt-4 flex justify-end">
@@ -503,7 +523,7 @@ const ProductList = ({
             ))}
             {filteredProducts.length === 0 && (
               <tr>
-                <td colSpan={12} className="px-4 py-3 text-sm text-center text-gray-500">
+                <td colSpan={13} className="px-4 py-3 text-sm text-center text-gray-500">
                   No products found. Add a product to get started.
                 </td>
               </tr>

@@ -43,6 +43,7 @@ function App() {
     platform_fees: number;
     filament_spool_price: number;
     desired_profit_margin: number;
+    packaging_cost: number;
     [key: string]: number;
   }
 
@@ -53,7 +54,8 @@ function App() {
     wear_tear_markup: 5,
     platform_fees: 7,
     filament_spool_price: 18,
-    desired_profit_margin: 55
+    desired_profit_margin: 55,
+    packaging_cost: 0.5
   })
 
   useEffect(() => {
@@ -165,8 +167,8 @@ function App() {
     // Calculate wear and tear cost
     const wearTearCost = filamentCost * (settings.wear_tear_markup / 100)
     
-    // Calculate total cost (now including additional parts cost)
-    const totalCost = laborCost + filamentCost + wearTearCost + product.additional_parts_cost
+    // Calculate total cost (now including additional parts cost and packaging cost)
+    const totalCost = laborCost + filamentCost + wearTearCost + product.additional_parts_cost + settings.packaging_cost
     
     // Calculate suggested price based on desired profit margin
     const platformFeePercent = settings.platform_fees / 100
@@ -260,6 +262,10 @@ function App() {
       }, {} as typeof settings)
       
       setSettings(numericSettings)
+      
+      // Recalculate product margins with the new settings
+      const updatedProducts = products.map(product => calculateProductMargins(product))
+      setProducts(updatedProducts)
     } catch (err) {
       setError('Failed to update settings')
     }
@@ -568,6 +574,32 @@ function App() {
     }
   }
 
+  // Recalculate product margins when settings change
+  useEffect(() => {
+    if (products.length > 0) {
+      const updatedProducts = products.map(product => calculateProductMargins(product))
+      setProducts(updatedProducts)
+    }
+  }, [
+    settings.hourly_rate, 
+    settings.wear_tear_markup, 
+    settings.platform_fees, 
+    settings.filament_spool_price, 
+    settings.desired_profit_margin,
+    settings.packaging_cost,
+    products,
+    calculateProductMargins
+  ])
+
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchFilaments()
+    fetchPurchaseItems()
+    fetchParts()
+    fetchProducts()
+    fetchSettings()
+  }, [])
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white p-8 font-mono">
@@ -667,6 +699,7 @@ function App() {
               platformFees={settings.platform_fees}
               filamentSpoolPrice={settings.filament_spool_price}
               desiredProfitMargin={settings.desired_profit_margin}
+              packagingCost={settings.packaging_cost}
             />
           )}
 
@@ -681,6 +714,7 @@ function App() {
               platformFees={settings.platform_fees}
               filamentSpoolPrice={settings.filament_spool_price}
               desiredProfitMargin={settings.desired_profit_margin}
+              packagingCost={settings.packaging_cost}
             />
           )}
 
@@ -721,6 +755,7 @@ function App() {
                       platformFees={settings.platform_fees}
                       filamentSpoolPrice={settings.filament_spool_price}
                       desiredProfitMargin={settings.desired_profit_margin}
+                      packagingCost={settings.packaging_cost}
                       onUpdateSettings={updateSettings}
                     />
                   </div>
