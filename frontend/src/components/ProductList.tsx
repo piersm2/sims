@@ -9,7 +9,6 @@ interface ProductListProps {
   onDelete: (id: number) => void;
   hourlyRate: number;
   wearTearPercentage: number;
-  desiredMarkup?: number;
   platformFees?: number;
   filamentSpoolPrice?: number;
   desiredProfitMargin?: number;
@@ -21,7 +20,6 @@ interface Settings {
   filament_markup: number;
   hourly_rate: number;
   wear_tear_markup: number;
-  desired_markup: number;
   platform_fees: number;
   filament_spool_price: number;
   desired_profit_margin: number;
@@ -34,7 +32,6 @@ const ProductList = ({
   onDelete,
   hourlyRate,
   wearTearPercentage,
-  desiredMarkup = 0,
   platformFees = 0,
   filamentSpoolPrice = 18,
   desiredProfitMargin = 55,
@@ -51,7 +48,6 @@ const ProductList = ({
     filament_markup: 20,
     hourly_rate: hourlyRate,
     wear_tear_markup: wearTearPercentage,
-    desired_markup: desiredMarkup,
     platform_fees: platformFees,
     filament_spool_price: filamentSpoolPrice,
     desired_profit_margin: desiredProfitMargin
@@ -63,12 +59,11 @@ const ProductList = ({
       ...settings,
       hourly_rate: hourlyRate,
       wear_tear_markup: wearTearPercentage,
-      desired_markup: desiredMarkup || 0,
       platform_fees: platformFees || 0,
       filament_spool_price: filamentSpoolPrice || 18,
       desired_profit_margin: desiredProfitMargin || 55
     });
-  }, [hourlyRate, wearTearPercentage, desiredMarkup, platformFees, filamentSpoolPrice, desiredProfitMargin]);
+  }, [hourlyRate, wearTearPercentage, platformFees, filamentSpoolPrice, desiredProfitMargin]);
 
   const handleSort = (field: keyof ProductWithCalculations) => {
     if (field === sortField) {
@@ -188,9 +183,8 @@ const ProductList = ({
           onClose={() => setIsEditModalOpen(false)}
           hourlyRate={hourlyRate}
           wearTearPercentage={wearTearPercentage}
-          desiredMarkup={desiredMarkup}
-          platformFees={platformFees}
-          filamentSpoolPrice={filamentSpoolPrice}
+          platformFees={settings.platform_fees}
+          filamentSpoolPrice={settings.filament_spool_price}
           desiredProfitMargin={settings.desired_profit_margin}
         />
       )}
@@ -230,17 +224,6 @@ const ProductList = ({
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-1">
-                    Desired Markup (%)
-                  </label>
-                  <input
-                    type="number"
-                    value={settings.desired_markup}
-                    onChange={(e) => handleSettingsChange('desired_markup', parseFloat(e.target.value) || 0)}
-                    className="w-full p-2 border border-gray-300 focus:ring-black focus:border-black"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 uppercase tracking-wider mb-1">
                     Desired Profit Margin (%)
                   </label>
                   <input
@@ -250,9 +233,7 @@ const ProductList = ({
                     className="w-full p-2 border border-gray-300 focus:ring-black focus:border-black"
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    This is used to calculate the maximum advertising budget per product while maintaining this profit margin.
-                    The ad budget is calculated as: (Current Profit) - (Profit at Desired Margin), where Profit at Desired Margin = List Price × Desired Margin %.
-                    Products with profit margins above this threshold will show available ad budget, while those below will show $0.
+                    Used to calculate the suggested price. The suggested price is calculated to achieve this profit margin after accounting for platform fees. Also used to calculate maximum advertising budget as: (Current Profit) - (Profit at Desired Margin).
                   </p>
                 </div>
                 <div>

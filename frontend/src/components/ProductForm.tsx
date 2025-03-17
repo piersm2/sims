@@ -10,7 +10,6 @@ interface ProductFormProps {
   onClose: () => void;
   hourlyRate: number;
   wearTearPercentage: number;
-  desiredMarkup?: number;
   platformFees?: number;
   filamentSpoolPrice?: number;
   desiredProfitMargin?: number;
@@ -23,7 +22,6 @@ const ProductForm = ({
   onClose,
   hourlyRate,
   wearTearPercentage,
-  desiredMarkup = 0,
   platformFees = 0,
   filamentSpoolPrice = 18,
   desiredProfitMargin = 55
@@ -48,7 +46,7 @@ const ProductForm = ({
     platform_fee_amount: 0,
     gross_profit: 0,
     profit_margin: 0,
-    markup_price: 0,
+    suggested_price: 0,
     advertising_budget: 0
   });
 
@@ -76,7 +74,7 @@ const ProductForm = ({
 
   useEffect(() => {
     calculateProfitMargin();
-  }, [formData, hourlyRate, wearTearPercentage, desiredMarkup, platformFees, filamentSpoolPrice, desiredProfitMargin]);
+  }, [formData, hourlyRate, wearTearPercentage, platformFees, filamentSpoolPrice, desiredProfitMargin]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -113,13 +111,16 @@ const ProductForm = ({
     // Calculate total cost (including additional parts cost)
     const totalCost = laborCost + filamentCost + wearTearCost + formData.additional_parts_cost;
     
-    // Calculate markup-based price (for display only)
-    const markupPrice = totalCost * (1 + desiredMarkup / 100);
+    // Calculate suggested price based on desired profit margin
+    // Formula: price = cost / (1 - desiredMargin - platformFeePercent)
+    const platformFeePercent = platformFees / 100;
+    const desiredMarginDecimal = desiredProfitMargin / 100;
+    const suggestedPrice = totalCost / (1 - desiredMarginDecimal - platformFeePercent);
     
-    // Use list_price if set, otherwise calculate from markup
+    // Use list_price if set, otherwise use suggested price based on profit margin
     const sellingPrice = formData.list_price > 0 
       ? formData.list_price 
-      : totalCost * (1 + desiredMarkup / 100);
+      : suggestedPrice;
     
     // Calculate platform fees
     const platformFeeAmount = sellingPrice * (platformFees / 100);
@@ -154,7 +155,7 @@ const ProductForm = ({
       platform_fee_amount: platformFeeAmount,
       gross_profit: grossProfit,
       profit_margin: profitMargin,
-      markup_price: markupPrice,
+      suggested_price: suggestedPrice,
       advertising_budget: advertisingBudget
     });
   };
@@ -304,7 +305,7 @@ const ProductForm = ({
                 min="0"
                 step="0.01"
               />
-              <p className="text-xs text-gray-500 mt-1">If set, this price will be used instead of calculating from markup</p>
+              <p className="text-xs text-gray-500 mt-1">If set, this price will be used instead of the suggested price based on profit margin</p>
             </div>
             
             <div>
@@ -342,8 +343,8 @@ const ProductForm = ({
                   <p className="font-semibold">{formatCurrency(calculations.total_cost)}</p>
                 </div>
                 <div>
-                  <span className="text-xs text-gray-600 uppercase">Markup Price:</span>
-                  <p className="font-semibold">{formatCurrency(calculations.markup_price)}</p>
+                  <span className="text-xs text-gray-600 uppercase">Suggested Price:</span>
+                  <p className="font-semibold">{formatCurrency(calculations.suggested_price)}</p>
                 </div>
                 <div>
                   <span className="text-xs text-gray-600 uppercase">Platform Fee:</span>
@@ -363,7 +364,7 @@ const ProductForm = ({
                 </div>
               </div>
               <div className="mt-2 text-xs text-gray-500">
-                <p>Using global settings: {formatPercent(desiredMarkup)} markup, {formatPercent(platformFees)} platform fees, ${filamentSpoolPrice.toFixed(2)}/kg filament, {formatPercent(desiredProfitMargin)} desired profit margin</p>
+                <p>Using global settings: {formatPercent(desiredProfitMargin)} desired profit margin, {formatPercent(platformFees)} platform fees, ${filamentSpoolPrice.toFixed(2)}/kg filament</p>
               </div>
             </div>
             

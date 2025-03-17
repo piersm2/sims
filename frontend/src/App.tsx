@@ -40,7 +40,6 @@ function App() {
     filament_markup: number;
     hourly_rate: number;
     wear_tear_markup: number;
-    desired_markup: number;
     platform_fees: number;
     filament_spool_price: number;
     desired_profit_margin: number;
@@ -52,7 +51,6 @@ function App() {
     filament_markup: 20,
     hourly_rate: 20,
     wear_tear_markup: 5,
-    desired_markup: 150,
     platform_fees: 7,
     filament_spool_price: 18,
     desired_profit_margin: 55
@@ -170,10 +168,15 @@ function App() {
     // Calculate total cost (now including additional parts cost)
     const totalCost = laborCost + filamentCost + wearTearCost + product.additional_parts_cost
     
-    // Use list_price if set, otherwise calculate from markup
+    // Calculate suggested price based on desired profit margin
+    const platformFeePercent = settings.platform_fees / 100
+    const desiredMarginDecimal = settings.desired_profit_margin / 100
+    const suggestedPrice = totalCost / (1 - desiredMarginDecimal - platformFeePercent)
+    
+    // Use list_price if set, otherwise use suggested price based on profit margin
     const sellingPrice = product.list_price > 0 
       ? product.list_price 
-      : totalCost * (1 + settings.desired_markup / 100)
+      : suggestedPrice;
     
     // Calculate platform fees
     const platformFeeAmount = sellingPrice * (settings.platform_fees / 100)
@@ -211,6 +214,7 @@ function App() {
       platform_fee_amount: platformFeeAmount,
       gross_profit: grossProfit,
       profit_margin: profitMargin,
+      suggested_price: suggestedPrice,
       advertising_budget: advertisingBudget
     }
   }
@@ -660,7 +664,6 @@ function App() {
               onClose={() => setIsAddingProduct(false)}
               hourlyRate={settings.hourly_rate}
               wearTearPercentage={settings.wear_tear_markup}
-              desiredMarkup={settings.desired_markup}
               platformFees={settings.platform_fees}
               filamentSpoolPrice={settings.filament_spool_price}
               desiredProfitMargin={settings.desired_profit_margin}
@@ -675,7 +678,6 @@ function App() {
               onClose={() => setEditingProduct(null)}
               hourlyRate={settings.hourly_rate}
               wearTearPercentage={settings.wear_tear_markup}
-              desiredMarkup={settings.desired_markup}
               platformFees={settings.platform_fees}
               filamentSpoolPrice={settings.filament_spool_price}
               desiredProfitMargin={settings.desired_profit_margin}
@@ -716,7 +718,6 @@ function App() {
                       onDelete={handleDeleteProduct}
                       hourlyRate={settings.hourly_rate}
                       wearTearPercentage={settings.wear_tear_markup}
-                      desiredMarkup={settings.desired_markup}
                       platformFees={settings.platform_fees}
                       filamentSpoolPrice={settings.filament_spool_price}
                       desiredProfitMargin={settings.desired_profit_margin}

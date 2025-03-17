@@ -24,6 +24,7 @@ export interface ProductCalculations {
   platform_fee_amount: number;
   gross_profit: number;
   profit_margin: number;
+  suggested_price: number; // Price calculated based on desired profit margin
   advertising_budget: number; // Maximum amount that can be spent on advertising while maintaining desired profit margin
 }
 
