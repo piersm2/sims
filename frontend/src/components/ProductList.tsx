@@ -114,6 +114,17 @@ const ProductList = ({
     }).format(value / 100);
   };
 
+  // Calculate actual markup percentage
+  const calculateMarkup = (listPrice: number, totalCost: number) => {
+    if (totalCost === 0) return 0;
+    return ((listPrice / totalCost) - 1) * 100;
+  };
+
+  // Calculate average markup across all products
+  const averageMarkup = products.length > 0 
+    ? products.reduce((sum, product) => sum + calculateMarkup(product.list_price, product.total_cost), 0) / products.length 
+    : 0;
+
   const handleEdit = async (product: Product) => {
     try {
       // Fetch the product with its filaments
@@ -328,12 +339,21 @@ const ProductList = ({
       </div>
 
       <div className="bg-gray-50 border-b-2 border-black px-4 py-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Average Profit Margin */}
           <div className="bg-white border-2 border-black p-4">
             <div className="text-xs uppercase tracking-wider font-bold mb-1">Avg. Profit Margin</div>
             <div className="text-2xl font-bold">
               {formatPercent(products.reduce((sum, product) => sum + product.profit_margin, 0) / (products.length || 1))}
+            </div>
+            <div className="text-xs text-gray-500 mt-1">Across all products</div>
+          </div>
+          
+          {/* Average Markup */}
+          <div className="bg-white border-2 border-black p-4">
+            <div className="text-xs uppercase tracking-wider font-bold mb-1">Avg. Markup</div>
+            <div className="text-2xl font-bold">
+              {formatPercent(averageMarkup)}
             </div>
             <div className="text-xs text-gray-500 mt-1">Across all products</div>
           </div>
@@ -441,6 +461,9 @@ const ProductList = ({
                 Profit Margin {getSortIcon('profit_margin')}
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                Markup
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -474,6 +497,7 @@ const ProductList = ({
                 <td className="px-4 py-3 text-sm">{formatCurrency(product.list_price)}</td>
                 <td className="px-4 py-3 text-sm">{formatCurrency(product.gross_profit)}</td>
                 <td className="px-4 py-3 text-sm">{formatPercent(product.profit_margin)}</td>
+                <td className="px-4 py-3 text-sm">{formatPercent(calculateMarkup(product.list_price, product.total_cost))}</td>
                 <td className="px-4 py-3 text-sm">
                   <div className="flex space-x-2">
                     <button
@@ -494,7 +518,7 @@ const ProductList = ({
             ))}
             {filteredProducts.length === 0 && (
               <tr>
-                <td colSpan={11} className="px-4 py-3 text-sm text-center text-gray-500">
+                <td colSpan={12} className="px-4 py-3 text-sm text-center text-gray-500">
                   No products found. Add a product to get started.
                 </td>
               </tr>
