@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import FilamentList from './components/FilamentList'
 import FilamentForm from './components/FilamentForm'
 import PrintQueue from './components/PrintQueue'
@@ -75,6 +75,12 @@ function App() {
     const path = location.pathname.slice(1) || 'filaments'
     if (['filaments', 'parts', 'printers', 'products'].includes(path)) {
       setActiveView(path as 'filaments' | 'parts' | 'printers' | 'products')
+      
+      // Refetch data when route changes to ensure content updates
+      if (path === 'filaments') fetchFilaments();
+      if (path === 'parts') fetchParts();
+      if (path === 'printers') fetchPrinters();
+      if (path === 'products') fetchProducts();
     } else {
       navigate('/filaments')
     }
@@ -622,24 +628,28 @@ function App() {
               <div className="flex space-x-2">
                 <Link
                   to="/filaments"
+                  onClick={() => setActiveView('filaments')}
                   className={`w-auto px-4 py-2 border border-black rounded-none text-xs font-bold text-white ${activeView === 'filaments' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'} focus:outline-none focus:ring-1 focus:ring-black transition-colors uppercase tracking-wider`}
                 >
                   FILAMENTS
                 </Link>
                 <Link
                   to="/parts"
+                  onClick={() => setActiveView('parts')}
                   className={`w-auto px-4 py-2 border border-black rounded-none text-xs font-bold text-white ${activeView === 'parts' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'} focus:outline-none focus:ring-1 focus:ring-black transition-colors uppercase tracking-wider`}
                 >
                   PARTS
                 </Link>
                 <Link
                   to="/printers"
+                  onClick={() => setActiveView('printers')}
                   className={`w-auto px-4 py-2 border border-black rounded-none text-xs font-bold text-white ${activeView === 'printers' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'} focus:outline-none focus:ring-1 focus:ring-black transition-colors uppercase tracking-wider`}
                 >
                   PRINTERS
                 </Link>
                 <Link
                   to="/products"
+                  onClick={() => setActiveView('products')}
                   className={`w-auto px-4 py-2 border border-black rounded-none text-xs font-bold text-white ${activeView === 'products' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'} focus:outline-none focus:ring-1 focus:ring-black transition-colors uppercase tracking-wider`}
                 >
                   PRODUCTS
@@ -720,54 +730,45 @@ function App() {
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
             <div className={`${activeView === 'products' ? 'lg:col-span-4' : 'lg:col-span-3'}`}>
-              <Routes>
-                <Route path="/parts" element={
-                  <PartList
-                    parts={parts}
-                    printers={printers.filter(p => p.id !== undefined) as { id: number; name: string }[]}
-                    onUpdatePart={handleUpdatePart}
-                    onDeletePart={handleDeletePart}
+              {activeView === 'parts' && (
+                <PartList
+                  parts={parts}
+                  printers={printers.filter(p => p.id !== undefined) as { id: number; name: string }[]}
+                  onUpdatePart={handleUpdatePart}
+                  onDeletePart={handleDeletePart}
+                />
+              )}
+              {activeView === 'filaments' && (
+                <FilamentList
+                  filaments={filaments}
+                  onUpdate={handleUpdateFilament}
+                  onDelete={handleDeleteFilament}
+                />
+              )}
+              {activeView === 'printers' && (
+                <PrinterList
+                  printers={printers}
+                  onUpdate={handleUpdatePrinter}
+                  onDelete={handleDeletePrinter}
+                  onAdd={handleAddPrinter}
+                />
+              )}
+              {activeView === 'products' && (
+                <div className="flex flex-col space-y-4">
+                  <ProductList
+                    products={products}
+                    onUpdate={handleUpdateProduct}
+                    onDelete={handleDeleteProduct}
+                    hourlyRate={settings.hourly_rate}
+                    wearTearPercentage={settings.wear_tear_markup}
+                    platformFees={settings.platform_fees}
+                    filamentSpoolPrice={settings.filament_spool_price}
+                    desiredProfitMargin={settings.desired_profit_margin}
+                    packagingCost={settings.packaging_cost}
+                    onUpdateSettings={updateSettings}
                   />
-                } />
-                <Route path="/filaments" element={
-                  <FilamentList
-                    filaments={filaments}
-                    onUpdate={handleUpdateFilament}
-                    onDelete={handleDeleteFilament}
-                  />
-                } />
-                <Route path="/printers" element={
-                  <PrinterList
-                    printers={printers}
-                    onUpdate={handleUpdatePrinter}
-                    onDelete={handleDeletePrinter}
-                    onAdd={handleAddPrinter}
-                  />
-                } />
-                <Route path="/products" element={
-                  <div className="flex flex-col space-y-4">
-                    <ProductList
-                      products={products}
-                      onUpdate={handleUpdateProduct}
-                      onDelete={handleDeleteProduct}
-                      hourlyRate={settings.hourly_rate}
-                      wearTearPercentage={settings.wear_tear_markup}
-                      platformFees={settings.platform_fees}
-                      filamentSpoolPrice={settings.filament_spool_price}
-                      desiredProfitMargin={settings.desired_profit_margin}
-                      packagingCost={settings.packaging_cost}
-                      onUpdateSettings={updateSettings}
-                    />
-                  </div>
-                } />
-                <Route path="*" element={
-                  <FilamentList
-                    filaments={filaments}
-                    onUpdate={handleUpdateFilament}
-                    onDelete={handleDeleteFilament}
-                  />
-                } />
-              </Routes>
+                </div>
+              )}
             </div>
             <div>
               {activeView === 'filaments' && (
