@@ -1,6 +1,6 @@
 # SIMS: Spool Inventory Management System
 
-A modern web application for managing your 3D printer filament inventory. Built with React, TypeScript, and SQLite, SIMS helps you keep track of your filament collection with a clean, responsive interface.
+A comprehensive 3D printing management solution. Built with React, TypeScript, and SQLite, SIMS helps you track your filament collection, manage printers, maintain a parts inventory, organize print jobs, and calculate product pricing with a clean, responsive interface.
 
 ![CleanShot 2024-12-31 at 19 26 25@2x](https://github.com/user-attachments/assets/37979d7f-9ca2-42ba-b475-0cd54b84b5a3)
 
@@ -102,6 +102,99 @@ A modern web application for managing your 3D printer filament inventory. Built 
 4. Open your browser and navigate to:
    - Frontend: http://localhost:5173
    - Backend API: http://localhost:8175
+
+## Docker Installation
+
+SIMS is containerized and can be easily installed using Docker. There are two options for Docker installation:
+
+### Option 1: Using Pre-built Image (Recommended)
+
+1. Create a `docker-compose.yml` file with the following content:
+   ```yaml
+   version: '3.8'
+   
+   services:
+     app:
+       image: joshpigford/sims:latest
+       volumes:
+         - db-data:/app/db
+       ports:
+         - "5173:5173"
+         - "8175:8175"
+       restart: unless-stopped
+   
+   volumes:
+     db-data:
+       name: sims-db-data
+   ```
+
+2. Run the container:
+   ```bash
+   docker-compose up -d
+   ```
+
+3. Access SIMS at http://localhost:5173
+
+### Option 2: Building the Image Yourself
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Shpigford/sims.git
+   cd sims
+   ```
+
+2. Build and run with Docker Compose:
+   ```bash
+   docker-compose -f docker-compose.yml up -d --build
+   ```
+
+3. Access SIMS at http://localhost:5173
+
+### Automatic Updates and Backups
+
+For production use, you may want to enable automatic updates and backups. Create a `docker-compose.prod.yml` file with the following content:
+
+```yaml
+version: '3.8'
+
+services:
+  app:
+    image: joshpigford/sims:latest
+    volumes:
+      - db-data:/app/db
+    ports:
+      - "5173:5173"
+      - "8175:8175"
+    restart: unless-stopped
+
+  watchtower:
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 30
+    restart: unless-stopped
+
+  backup:
+    image: offen/docker-volume-backup:v2
+    environment:
+      BACKUP_CRON_EXPRESSION: "0 4 * * *"    # Runs at 4 AM daily
+      BACKUP_RETENTION_DAYS: "7"             # Keep backups for 7 days
+      BACKUP_FILENAME: "sims-backup-%Y-%m-%d"
+    volumes:
+      - db-data:/backup/sims-db:ro           # Mount the database volume
+      - ./backups:/archive                   # Local folder to store backups
+    depends_on:
+      - app
+
+volumes:
+  db-data:
+    name: sims-db-data
+```
+
+Run with:
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
 
 ## Database
 
