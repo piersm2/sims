@@ -525,10 +525,20 @@ function App() {
         }
       }
       
-      await fetchProducts()
+      // Add filaments to the new product object
+      const completeNewProduct = {
+        ...newProduct,
+        filaments: filaments
+      };
+      
+      // Calculate margins and add to the products array
+      const productWithCalculations = calculateProductMargins(completeNewProduct);
+      setProducts([...products, productWithCalculations]);
+      
       setIsAddingProduct(false)
     } catch (err) {
       setError('Failed to add product')
+      await fetchProducts() // Fallback to full refresh if adding fails
     }
   }
   
@@ -555,12 +565,25 @@ function App() {
       
       if (!response.ok) throw new Error('Failed to update product');
       
-      // Filaments are managed through the dedicated endpoints in the FilamentSelector component
-      // so we don't need to update them here
+      // Get the updated product data
+      const updatedProductData = await response.json();
       
-      await fetchProducts();
+      // Filaments are managed through the dedicated endpoints in the FilamentSelector component
+      // Update the products array in state with the updated product
+      const updatedProducts = products.map(p => 
+        p.id === product.id 
+          ? calculateProductMargins({
+              ...updatedProductData,
+              // Keep the filaments from the product object since they're managed separately
+              filaments: product.filaments || []
+            }) 
+          : p
+      );
+      
+      setProducts(updatedProducts);
     } catch (err) {
       setError('Failed to update product');
+      await fetchProducts(); // Fallback to full refresh if update fails
     }
   };
   
@@ -574,9 +597,11 @@ function App() {
       
       if (!response.ok) throw new Error('Failed to delete product')
       
-      await fetchProducts()
+      // Filter out the deleted product from state
+      setProducts(products.filter(product => product.id !== id))
     } catch (err) {
       setError('Failed to delete product')
+      await fetchProducts() // Fallback to full refresh if delete fails
     }
   }
 
