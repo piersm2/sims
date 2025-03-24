@@ -263,7 +263,7 @@ app.get('/api/print-queue', async (req, res) => {
             SELECT q.*, p.name as printer_name 
             FROM print_queue q 
             LEFT JOIN printers p ON q.printer_id = p.id 
-            ORDER BY q.created_at DESC
+            ORDER BY q.position ASC
         `);
         
         // Transform the results to match the frontend type
@@ -284,9 +284,14 @@ app.get('/api/print-queue', async (req, res) => {
 app.post('/api/print-queue', async (req, res) => {
     try {
         const { item_name, printer_id, color, status = 'pending' } = req.body;
+        
+        // Get the maximum position value to add new items at the top
+        const maxPositionResult = await db.get('SELECT MAX(position) as maxPosition FROM print_queue');
+        const position = maxPositionResult.maxPosition !== null ? maxPositionResult.maxPosition + 1 : 0;
+        
         const result = await db.run(
-            'INSERT INTO print_queue (item_name, printer_id, color, status) VALUES (?, ?, ?, ?)',
-            [item_name, printer_id, color, status]
+            'INSERT INTO print_queue (item_name, printer_id, color, status, position) VALUES (?, ?, ?, ?, ?)',
+            [item_name, printer_id, color, status, position]
         );
         
         const newItem = await db.get(`
@@ -356,6 +361,52 @@ app.delete('/api/print-queue/:id', async (req, res) => {
         res.status(204).send();
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete print queue item' });
+    }
+});
+
+// New endpoint for reordering print queue items
+app.post('/api/print-queue/reorder', async (req, res) => {
+    try {
+        const { items } = req.body;
+        
+        if (!Array.isArray(items)) {
+            return res.status(400).json({ error: 'Items must be an array' });
+        }
+        
+        // Update positions in a transaction
+        await db.run('BEGIN TRANSACTION');
+        
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            await db.run(
+                'UPDATE print_queue SET position = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+                [i, item.id]
+            );
+        }
+        
+        await db.run('COMMIT');
+        
+        // Get updated items
+        const updatedItems = await db.all(`
+            SELECT q.*, p.name as printer_name 
+            FROM print_queue q 
+            LEFT JOIN printers p ON q.printer_id = p.id 
+            ORDER BY q.position ASC
+        `);
+        
+        // Transform the results to match the frontend type
+        const formattedItems = updatedItems.map(item => ({
+            ...item,
+            printer: item.printer_name ? {
+                id: item.printer_id,
+                name: item.printer_name
+            } : undefined
+        }));
+        
+        res.json(formattedItems);
+    } catch (error) {
+        await db.run('ROLLBACK');
+        res.status(500).json({ error: 'Failed to reorder print queue items' });
     }
 });
 

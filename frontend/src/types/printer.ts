@@ -11,6 +11,7 @@ export interface PrintQueueItem {
     printer_id?: number;
     color?: string;
     status: 'pending' | 'in_progress' | 'completed';
+    position?: number;
     created_at?: string;
     updated_at?: string;
     printer?: Printer;

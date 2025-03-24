@@ -368,6 +368,26 @@ function App() {
     }
   }
 
+  const handleReorderQueueItems = async (items: PrintQueueItem[]) => {
+    try {
+      const response = await fetch(`${API_URL}/api/print-queue/reorder`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ items })
+      })
+      
+      if (!response.ok) throw new Error('Failed to reorder queue items')
+      const data = await response.json()
+      setQueueItems(data)
+    } catch (err) {
+      setError('Failed to reorder queue items')
+      // Fallback to original order via refetch
+      fetchPrintQueue()
+    }
+  }
+
   const handleAddPurchaseItem = async (item: PurchaseListItem) => {
     try {
       const response = await fetch(`${API_URL}/api/purchase-list`, {
@@ -805,6 +825,7 @@ function App() {
                     onAdd={handleAddQueueItem}
                     onUpdate={handleUpdateQueueItem}
                     onDelete={handleDeleteQueueItem}
+                    onReorder={handleReorderQueueItems}
                   />
                   <div className="mt-4">
                     <PurchaseList
