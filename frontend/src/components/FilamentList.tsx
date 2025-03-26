@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Filament } from '../types/filament'
 import FilamentForm from './FilamentForm'
 
-type SortField = 'name' | 'material' | 'quantity' | 'manufacturer'
+type SortField = 'name' | 'material' | 'quantity' | 'manufacturer' | 'minimum_quantity'
 type SortDirection = 'asc' | 'desc'
 
 interface FilamentListProps {
@@ -224,6 +224,13 @@ export default function FilamentList({ filaments, onUpdate, onDelete }: Filament
                 <th
                   scope="col"
                   className="py-3 px-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:text-gray-300"
+                  onClick={() => handleSort('minimum_quantity')}
+                >
+                  Minimum Quantity {getSortIcon('minimum_quantity')}
+                </th>
+                <th
+                  scope="col"
+                  className="py-3 px-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:text-gray-300"
                   onClick={() => handleSort('manufacturer')}
                 >
                   Manufacturer Data {getSortIcon('manufacturer')}
@@ -271,6 +278,32 @@ export default function FilamentList({ filaments, onUpdate, onDelete }: Filament
                         className="px-2 border border-black hover:bg-black hover:text-white"
                       >
                         +
+                      </button>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2 text-sm text-black border-r-2 border-black">
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => onUpdate({ ...filament, minimum_quantity_override: Math.max(0, (filament.minimum_quantity_override ?? filament.minimum_quantity) - 1) })}
+                        className="px-2 border border-black hover:bg-black hover:text-white"
+                      >
+                        -
+                      </button>
+                      <span className="w-12 text-center">
+                        {filament.minimum_quantity_override ?? filament.minimum_quantity}
+                      </span>
+                      <button
+                        onClick={() => onUpdate({ ...filament, minimum_quantity_override: (filament.minimum_quantity_override ?? filament.minimum_quantity) + 1 })}
+                        className="px-2 border border-black hover:bg-black hover:text-white"
+                      >
+                        +
+                      </button>
+                      <button
+                        onClick={() => onUpdate({ ...filament, minimum_quantity_override: null })}
+                        className="text-xs text-gray-500 hover:text-black"
+                        title="Reset to automatic calculation"
+                      >
+                        ↺
                       </button>
                     </div>
                   </td>
@@ -344,6 +377,36 @@ export default function FilamentList({ filaments, onUpdate, onDelete }: Filament
                     >
                       +
                     </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-black">
+                    <span className="text-gray-500 uppercase text-xs">Minimum:</span>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => onUpdate({ ...filament, minimum_quantity_override: Math.max(0, (filament.minimum_quantity_override ?? filament.minimum_quantity) - 1) })}
+                        className="px-2 border border-black hover:bg-black hover:text-white"
+                      >
+                        -
+                      </button>
+                      <span className="w-12 text-center">
+                        {filament.minimum_quantity_override ?? filament.minimum_quantity}
+                      </span>
+                      <button
+                        onClick={() => onUpdate({ ...filament, minimum_quantity_override: (filament.minimum_quantity_override ?? filament.minimum_quantity) + 1 })}
+                        className="px-2 border border-black hover:bg-black hover:text-white"
+                      >
+                        +
+                      </button>
+                      <button
+                        onClick={() => onUpdate({ ...filament, minimum_quantity_override: null })}
+                        className="text-xs text-gray-500 hover:text-black"
+                        title="Reset to automatic calculation"
+                      >
+                        ↺
+                      </button>
+                    </div>
                   </div>
                 </div>
 
