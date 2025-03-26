@@ -244,7 +244,7 @@ export default function FilamentList({ filaments, onUpdate, onDelete }: Filament
               {sortedFilaments.map((filament) => (
                 <tr 
                   key={filament.id} 
-                  className={`bg-white ${filament.quantity < (filament.minimum_quantity_override ?? filament.minimum_quantity) ? 'bg-red-200' : ''}`}
+                  className={`${filament.quantity < (filament.minimum_quantity_override ?? filament.minimum_quantity) ? 'bg-red-200' : 'bg-white'}`}
                 >
                   <td className="px-3 py-2 text-sm font-medium text-black border-r-2 border-black">
                     <div className="flex items-center">
@@ -340,7 +340,7 @@ export default function FilamentList({ filaments, onUpdate, onDelete }: Filament
             {sortedFilaments.map((filament) => (
               <div 
                 key={filament.id} 
-                className={`bg-white px-2 py-3 sm:p-4 space-y-3 ${filament.quantity < (filament.minimum_quantity_override ?? filament.minimum_quantity) ? 'bg-red-200' : ''}`}
+                className={`px-2 py-3 sm:p-4 space-y-3 ${filament.quantity < (filament.minimum_quantity_override ?? filament.minimum_quantity) ? 'bg-red-200' : 'bg-white'}`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
