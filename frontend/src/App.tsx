@@ -634,19 +634,8 @@ function App() {
     settings.platform_fees, 
     settings.filament_spool_price, 
     settings.desired_profit_margin,
-    settings.packaging_cost,
-    products,
-    calculateProductMargins
+    settings.packaging_cost
   ])
-
-  // Fetch data on component mount
-  useEffect(() => {
-    fetchFilaments()
-    fetchPurchaseItems()
-    fetchParts()
-    fetchProducts()
-    fetchSettings()
-  }, [])
 
   if (isLoading) {
     return (
