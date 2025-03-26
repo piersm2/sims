@@ -585,18 +585,15 @@ function App() {
       
       if (!response.ok) throw new Error('Failed to update product');
       
-      // Get the updated product data
-      const updatedProductData = await response.json();
+      // Fetch the complete updated product data with filaments
+      const updatedProductResponse = await fetch(`${API_URL}/api/products/${product.id}`);
+      if (!updatedProductResponse.ok) throw new Error('Failed to fetch updated product');
+      const updatedProductData = await updatedProductResponse.json();
       
-      // Filaments are managed through the dedicated endpoints in the FilamentSelector component
-      // Update the products array in state with the updated product
+      // Update the products array in state with the complete updated product
       const updatedProducts = products.map(p => 
         p.id === product.id 
-          ? calculateProductMargins({
-              ...updatedProductData,
-              // Keep the filaments from the product object since they're managed separately
-              filaments: product.filaments || []
-            }) 
+          ? calculateProductMargins(updatedProductData)
           : p
       );
       
