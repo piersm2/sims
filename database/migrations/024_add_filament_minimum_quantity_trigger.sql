@@ -6,7 +6,7 @@ SELECT
     CASE 
         WHEN f.minimum_quantity_override IS NOT NULL THEN f.minimum_quantity_override
         WHEN COUNT(pf.product_id) = 0 THEN 0
-        ELSE 2 + (COUNT(pf.product_id) + 2) / 3  -- This gives us 2 + ceil(count/3)
+        ELSE MIN(8, 2 + (COUNT(pf.product_id) + 2) / 3)  -- This gives us min(8, 2 + ceil(count/3))
     END as calculated_minimum
 FROM filaments f
 LEFT JOIN product_filaments pf ON f.id = pf.filament_id

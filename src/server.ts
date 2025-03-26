@@ -70,6 +70,7 @@ async function runMigrations(db: Database) {
         let migrations = [];
         try {
             migrations = await fs.readdir(MIGRATIONS_PATH);
+            console.log('Found migrations:', migrations);
         } catch (error) {
             console.log('No migrations found, continuing with initialization');
             return;
@@ -83,6 +84,7 @@ async function runMigrations(db: Database) {
         
         const currentVersion = await db.get('SELECT MAX(version) as version FROM schema_versions');
         const dbVersion = currentVersion?.version || 0;
+        console.log('Current database version:', dbVersion);
         
         // Sort migrations numerically
         const pendingMigrations = migrations
@@ -94,8 +96,11 @@ async function runMigrations(db: Database) {
             })
             .filter(f => parseInt(f.split('_')[0]) > dbVersion);
 
+        console.log('Pending migrations:', pendingMigrations);
+
         // Run pending migrations in order
         for (const migration of pendingMigrations) {
+            console.log(`Running migration: ${migration}`);
             const sql = await fs.readFile(join(MIGRATIONS_PATH, migration), 'utf8');
             await db.exec(sql);
             console.log(`Applied migration: ${migration}`);
@@ -447,25 +452,48 @@ app.post('/api/purchase-list', async (req, res) => {
 })
 
 app.put('/api/purchase-list/:id', async (req, res) => {
-  const { id } = req.params
-  const { quantity } = req.body
-  try {
-    await db.run(
-      'UPDATE purchase_list SET quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      [quantity, id]
-    )
-    const item = await db.get(`
-      SELECT pl.*, f.name, f.material, f.color, f.manufacturer
-      FROM purchase_list pl
-      JOIN filaments f ON pl.filament_id = f.id
-      WHERE pl.id = ?
-    `, id)
-    res.json(item)
-  } catch (error) {
-    console.error('Error updating purchase list item:', error)
-    res.status(500).json({ error: 'Failed to update purchase list item' })
-  }
-})
+    try {
+        const { id } = req.params;
+        const updates = { ...req.body };
+        
+        // Remove fields we don't want to update
+        delete updates.id;
+        delete updates.created_at;
+        delete updates.updated_at;
+        delete updates.filament;  // Remove the nested filament object
+        delete updates.name;      // Remove filament fields
+        delete updates.material;
+        delete updates.color;
+        delete updates.manufacturer;
+        
+        updates.updated_at = new Date().toISOString();
+
+        const fields = Object.keys(updates);
+        const setClause = fields.map(field => `${field} = ?`).join(', ');
+        const values = fields.map(field => updates[field]);
+
+        await db.run(
+            `UPDATE purchase_list SET ${setClause} WHERE id = ?`,
+            [...values, id]
+        );
+
+        // Get the updated item with filament details
+        const updatedItem = await db.get(`
+            SELECT pl.*, f.name, f.material, f.color, f.color2, f.color3, f.manufacturer
+            FROM purchase_list pl
+            JOIN filaments f ON pl.filament_id = f.id
+            WHERE pl.id = ?
+        `, id);
+
+        if (!updatedItem) {
+            return res.status(404).json({ error: 'Purchase list item not found' });
+        }
+        res.json(updatedItem);
+    } catch (error) {
+        console.error('Error updating purchase list item:', error);
+        res.status(500).json({ error: 'Failed to update purchase list item' });
+    }
+});
 
 app.delete('/api/purchase-list/:id', async (req, res) => {
   const { id } = req.params

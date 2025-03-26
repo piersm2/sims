@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { PurchaseListItem } from '../types/purchase';
 import { Filament } from '../types/filament';
+import { API_URL } from '../config';
 
 interface PurchaseListProps {
     items: PurchaseListItem[];
@@ -8,6 +9,17 @@ interface PurchaseListProps {
     onAdd: (item: PurchaseListItem) => void;
     onUpdate: (item: PurchaseListItem) => void;
     onDelete: (id: number) => void;
+}
+
+interface PurchaseItem {
+  id: number;
+  filament_id: number;
+  quantity: number;
+  notes?: string;
+  ordered: boolean;
+  created_at: string;
+  updated_at: string;
+  filament: Filament;
 }
 
 export default function PurchaseList({ items, filaments, onAdd, onUpdate, onDelete }: PurchaseListProps) {
@@ -33,8 +45,44 @@ export default function PurchaseList({ items, filaments, onAdd, onUpdate, onDele
 
     const handleFilamentSelect = (filament: Filament) => {
         setIsFilamentDropdownOpen(false);
-        onAdd({ filament_id: filament.id!, quantity: 1 });
+        onAdd({ 
+            filament_id: filament.id!, 
+            quantity: 1,
+            ordered: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            filament: filament
+        } as PurchaseListItem);
         setFilamentSearch('');
+    };
+
+    const handleToggleOrdered = async (item: PurchaseItem) => {
+        try {
+            console.log('Toggling ordered state for item:', item);
+            const updatedItem = {
+                ...item,
+                ordered: !item.ordered
+            };
+            console.log('Sending update with data:', updatedItem);
+            const response = await fetch(`${API_URL}/api/purchase-list/${item.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updatedItem),
+            });
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Error response:', errorText);
+                throw new Error(`Failed to update purchase item: ${errorText}`);
+            }
+            const updatedData = await response.json();
+            console.log('Received updated data:', updatedData);
+            onUpdate(updatedData);
+        } catch (error) {
+            console.error('Error updating purchase item:', error);
+        }
     };
 
     return (
@@ -118,6 +166,16 @@ export default function PurchaseList({ items, filaments, onAdd, onUpdate, onDele
                                         className="px-2 border border-black hover:bg-black hover:text-white"
                                     >
                                         +
+                                    </button>
+                                    <button
+                                        onClick={() => handleToggleOrdered(item as PurchaseItem)}
+                                        className={`px-2 border text-xs font-bold uppercase tracking-wider ${
+                                            item.ordered 
+                                                ? 'border-green-600 text-green-600 hover:bg-green-50' 
+                                                : 'border-black text-black hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        {item.ordered ? '✓' : '○'}
                                     </button>
                                     <button
                                         onClick={() => onDelete(item.id!)}

@@ -403,20 +403,10 @@ function App() {
     }
   }
 
-  const handleUpdatePurchaseItem = async (item: PurchaseListItem) => {
-    try {
-      const response = await fetch(`${API_URL}/api/purchase-list/${item.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(item)
-      })
-      if (!response.ok) throw new Error('Failed to update purchase item')
-      await fetchPurchaseItems()
-      setError(null)
-    } catch (err) {
-      setError('Failed to update purchase item')
-    }
-  }
+  const handleUpdatePurchaseItem = (item: PurchaseListItem) => {
+    setPurchaseItems(items => items.map(i => i.id === item.id ? item : i));
+    setError(null);
+  };
 
   const handleDeletePurchaseItem = async (id: number) => {
     if (!confirm('Are you sure you want to delete this purchase item?')) return
