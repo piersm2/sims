@@ -8,10 +8,6 @@ interface FilamentSelectorProps {
   onFilamentsChange: (filaments: Filament[]) => void;
 }
 
-interface FilamentWithAmount extends Filament {
-  filament_usage_amount?: number;
-}
-
 const FilamentSelector = ({ productId, selectedFilaments, onFilamentsChange }: FilamentSelectorProps) => {
   const [allFilaments, setAllFilaments] = useState<Filament[]>([]);
   const [loading, setLoading] = useState(false);
