@@ -24,7 +24,11 @@ GROUP BY f.id;
 
 -- Update existing filaments to trigger the purchase list population
 UPDATE filaments 
-SET minimum_quantity_override = minimum_quantity_override;
+SET minimum_quantity = (
+    SELECT minimum_quantity 
+    FROM filament_minimum_quantities 
+    WHERE id = filaments.id
+);
 
 -- Update schema version
 INSERT OR IGNORE INTO schema_versions (version) VALUES (35); 
