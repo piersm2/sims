@@ -119,6 +119,10 @@ const ProductList = ({
     }).format(value / 100);
   };
 
+  const formatFilamentAmount = (amount: number) => {
+    return Number(amount).toFixed(1);
+  };
+
   // Calculate actual markup percentage
   const calculateMarkup = (listPrice: number, totalCost: number) => {
     if (totalCost === 0) return 0;
@@ -474,7 +478,7 @@ const ProductList = ({
               <tr key={product.id} className="hover:bg-gray-50">
                 <td className="px-4 py-3 text-sm">{product.name}</td>
                 <td className="px-4 py-3 text-sm">{product.business}</td>
-                <td className="px-4 py-3 text-sm">{product.filament_used}g</td>
+                <td className="px-4 py-3 text-sm">{formatFilamentAmount(product.filament_used)}g</td>
                 <td className="px-4 py-3 text-sm">
                   {product.filaments && product.filaments.length > 0 ? (
                     <div className="flex flex-wrap gap-1">
