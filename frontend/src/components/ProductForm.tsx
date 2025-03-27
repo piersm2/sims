@@ -47,8 +47,7 @@ const ProductForm = ({
     platform_fee_amount: 0,
     gross_profit: 0,
     profit_margin: 0,
-    suggested_price: 0,
-    advertising_budget: 0
+    suggested_price: 0
   });
 
   const [selectedFilaments, setSelectedFilaments] = useState<Filament[]>([]);
@@ -141,13 +140,6 @@ const ProductForm = ({
     // Calculate profit margin
     const profitMargin = sellingPrice > 0 ? (grossProfit / sellingPrice) * 100 : 0;
     
-    // Calculate advertising budget
-    let advertisingBudget = 0;
-    if (profitMargin > desiredProfitMargin) {
-      const profitAtDesiredMargin = (sellingPrice * desiredProfitMargin) / 100;
-      advertisingBudget = grossProfit - profitAtDesiredMargin;
-    }
-    
     setCalculations({
       labor_cost: laborCost,
       filament_cost: totalFilamentCost,
@@ -157,8 +149,7 @@ const ProductForm = ({
       platform_fee_amount: platformFeeAmount,
       gross_profit: grossProfit,
       profit_margin: profitMargin,
-      suggested_price: suggestedPrice,
-      advertising_budget: advertisingBudget
+      suggested_price: suggestedPrice
     });
   };
 
@@ -358,10 +349,6 @@ const ProductForm = ({
                 <div>
                   <span className="text-xs text-gray-600 uppercase">Profit Margin:</span>
                   <p className="font-semibold">{formatPercent(calculations.profit_margin)}</p>
-                </div>
-                <div>
-                  <span className="text-xs text-gray-600 uppercase">Ad Budget:</span>
-                  <p className="font-semibold">{formatCurrency(calculations.advertising_budget)}</p>
                 </div>
               </div>
               <div className="mt-2 text-xs text-gray-500">

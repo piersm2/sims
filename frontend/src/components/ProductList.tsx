@@ -465,9 +465,6 @@ const ProductList = ({
                 Markup
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                Advertising Budget
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -502,7 +499,6 @@ const ProductList = ({
                 <td className="px-4 py-3 text-sm">{formatCurrency(product.gross_profit)}</td>
                 <td className="px-4 py-3 text-sm">{formatPercent(product.profit_margin)}</td>
                 <td className="px-4 py-3 text-sm">{formatPercent(calculateMarkup(product.list_price, product.total_cost))}</td>
-                <td className="px-4 py-3 text-sm">{formatCurrency(product.advertising_budget)}</td>
                 <td className="px-4 py-3 text-sm">
                   <div className="flex space-x-2">
                     <button

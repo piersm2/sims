@@ -210,13 +210,6 @@ function App() {
     // Calculate profit margin
     const profitMargin = sellingPrice > 0 ? (grossProfit / sellingPrice) * 100 : 0
     
-    // Calculate advertising budget
-    let advertisingBudget = 0;
-    if (profitMargin > settings.desired_profit_margin) {
-      const profitAtDesiredMargin = (sellingPrice * settings.desired_profit_margin) / 100;
-      advertisingBudget = grossProfit - profitAtDesiredMargin;
-    }
-    
     return {
       ...product,
       filament_used: totalFilamentUsed,
@@ -228,8 +221,7 @@ function App() {
       platform_fee_amount: platformFeeAmount,
       gross_profit: grossProfit,
       profit_margin: profitMargin,
-      suggested_price: suggestedPrice,
-      advertising_budget: advertisingBudget
+      suggested_price: suggestedPrice
     }
   }
 
@@ -308,6 +300,9 @@ function App() {
       })
       if (!response.ok) throw new Error('Failed to update filament')
       await fetchFilaments()
+      // Recalculate product margins with the updated filament costs
+      const updatedProducts = products.map(product => calculateProductMargins(product))
+      setProducts(updatedProducts)
       setError(null)
     } catch (err) {
       setError('Failed to update filament')
