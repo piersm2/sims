@@ -9,3 +9,4 @@
 .read migrations/021_ensure_packaging_cost_setting.sql 
 .read migrations/023_add_filament_minimum_quantity_trigger.sql
 .read migrations/024_add_minimum_quantity_override.sql 
+.read migrations/040_fix_packaging_cost_default.sql 

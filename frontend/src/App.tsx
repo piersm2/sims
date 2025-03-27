@@ -243,9 +243,9 @@ function App() {
 
   const updateSettings = async (newSettings: typeof settings) => {
     try {
-      // Convert numbers to strings for API
+      // Convert numbers to strings for API, preserving zero values
       const stringSettings = Object.entries(newSettings).reduce((acc, [key, value]) => {
-        acc[key] = value.toString()
+        acc[key] = value === 0 ? '0' : value.toString()
         return acc
       }, {} as Record<string, string>)
       
@@ -259,9 +259,10 @@ function App() {
       if (!response.ok) throw new Error('Failed to update settings')
       const data = await response.json()
       
-      // Convert string values back to numbers
+      // Convert string values back to numbers, preserving zero values
       const numericSettings = Object.entries(data).reduce((acc, [key, value]) => {
-        acc[key] = parseFloat(value as string) || 0
+        const numValue = parseFloat(value as string)
+        acc[key] = isNaN(numValue) ? 0 : numValue
         return acc
       }, {} as typeof settings)
       

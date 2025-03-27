@@ -37,7 +37,7 @@ const ProductList = ({
   platformFees = 0,
   filamentSpoolPrice = 18,
   desiredProfitMargin = 55,
-  packagingCost = 0.5,
+  packagingCost = 0,
   onUpdateSettings
 }: ProductListProps) => {
   const [sortField, setSortField] = useState<keyof ProductWithCalculations>('name');
@@ -66,7 +66,7 @@ const ProductList = ({
       platform_fees: platformFees || 0,
       filament_spool_price: filamentSpoolPrice || 18,
       desired_profit_margin: desiredProfitMargin || 55,
-      packaging_cost: packagingCost || 0.5
+      packaging_cost: packagingCost
     });
   }, [hourlyRate, wearTearPercentage, platformFees, filamentSpoolPrice, desiredProfitMargin, packagingCost]);
 
