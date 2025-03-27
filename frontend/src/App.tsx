@@ -498,10 +498,10 @@ function App() {
     }
   }
 
-  const handleAddProduct = async (product: ProductFormData) => {
+  const handleAddProduct = async (product: Product | ProductFormData) => {
     try {
       // Extract filaments from the product data
-      const filaments = product.filaments || [];
+      const filaments = 'filaments' in product ? product.filaments || [] : [];
       
       // Create the product without filaments first
       const response = await fetch(`${API_URL}/api/products`, {
@@ -517,7 +517,7 @@ function App() {
           post_processing_time: product.post_processing_time,
           additional_parts_cost: product.additional_parts_cost,
           list_price: product.list_price,
-          notes: product.notes
+          notes: product.notes || ''
         })
       })
       
@@ -570,60 +570,35 @@ function App() {
     }
   }
   
-  const handleUpdateProduct = async (product: Product) => {
+  const handleUpdateProduct = async (product: Product | ProductFormData) => {
+    const productId = 'id' in product ? product.id : editingProduct?.id;
+    if (!productId) return;
+
+    const productWithId = {
+      ...product,
+      id: productId,
+      filament_used: product.filament_used || 0, // Ensure filament_used is always defined
+      notes: product.notes || '' // Ensure notes is always defined
+    };
+
     try {
-      // First update the product basic info
-      const response = await fetch(`${API_URL}/api/products/${product.id}`, {
+      const response = await fetch(`${API_URL}/api/products/${productId}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        // Only send the product data without filaments to the update endpoint
-        body: JSON.stringify({
-          name: product.name,
-          business: product.business,
-          filament_used: product.filament_used,
-          print_prep_time: product.print_prep_time,
-          post_processing_time: product.post_processing_time,
-          additional_parts_cost: product.additional_parts_cost,
-          list_price: product.list_price,
-          notes: product.notes
-        })
+        body: JSON.stringify(productWithId),
       });
-      
-      if (!response.ok) throw new Error('Failed to update product');
-      
-      // Update filament usage amounts if they exist
-      if (product.filaments) {
-        for (const filament of product.filaments) {
-          if (filament.id && filament.filament_usage_amount !== undefined) {
-            await fetch(`${API_URL}/api/products/${product.id}/filaments/${filament.id}`, {
-              method: 'PATCH',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ filament_usage_amount: filament.filament_usage_amount })
-            });
-          }
-        }
+
+      if (!response.ok) {
+        throw new Error('Failed to update product');
       }
-      
-      // Fetch the complete updated product data with filaments
-      const updatedProductResponse = await fetch(`${API_URL}/api/products/${product.id}`);
-      if (!updatedProductResponse.ok) throw new Error('Failed to fetch updated product');
-      const updatedProductData = await updatedProductResponse.json();
-      
-      // Update the products array in state with the complete updated product
-      const updatedProducts = products.map(p => 
-        p.id === product.id 
-          ? calculateProductMargins(updatedProductData)
-          : p
-      );
-      
-      setProducts(updatedProducts);
-    } catch (err) {
-      setError('Failed to update product');
-      await fetchProducts(); // Fallback to full refresh if update fails
+
+      const updatedProduct = await response.json();
+      setProducts(products.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+      setEditingProduct(null);
+    } catch (error) {
+      console.error('Error updating product:', error);
     }
   };
   

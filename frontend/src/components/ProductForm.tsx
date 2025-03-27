@@ -6,7 +6,7 @@ import FilamentSelector from './FilamentSelector';
 interface ProductFormProps {
   product: Product | null;
   isOpen: boolean;
-  onSubmit: (product: ProductFormData) => void;
+  onSubmit: (product: Product | ProductFormData) => void;
   onClose: () => void;
   hourlyRate: number;
   wearTearPercentage: number;
