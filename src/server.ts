@@ -1050,6 +1050,10 @@ app.get('/api/settings', async (req, res) => {
       acc[setting.key] = setting.value;
       return acc;
     }, {});
+    // Add cache control headers
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
     res.json(settingsObject);
   } catch (error) {
     console.error('Error fetching settings:', error);
@@ -1081,6 +1085,10 @@ app.put('/api/settings', async (req, res) => {
       return acc;
     }, {});
     
+    // Add cache control headers
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
     res.json(settingsObject);
   } catch (error) {
     console.error('Error updating settings:', error);

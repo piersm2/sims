@@ -227,7 +227,7 @@ function App() {
 
   const fetchSettings = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/settings`)
+      const response = await fetch(`${API_URL}/api/settings?t=${Date.now()}`)
       if (!response.ok) throw new Error('Failed to fetch settings')
       const data = await response.json()
       // Convert string values to numbers
