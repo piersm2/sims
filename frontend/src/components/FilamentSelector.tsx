@@ -227,10 +227,11 @@ const FilamentSelector = ({ productId, selectedFilaments, onFilamentsChange }: F
                       <button
                         type="button"
                         onClick={() => filament.id && handleRemoveFilament(filament.id)}
-                        className="text-red-600 hover:text-red-800"
+                        className="text-red-600 hover:text-red-800 text-lg font-bold"
                         disabled={loading}
+                        title="Remove filament"
                       >
-                        Remove
+                        ×
                       </button>
                     )}
                   </div>

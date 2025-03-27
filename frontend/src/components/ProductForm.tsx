@@ -282,6 +282,12 @@ const ProductForm = ({
               />
               <p className="text-xs text-gray-500 mt-1">Cost of additional parts required per piece</p>
             </div>
+
+            <FilamentSelector
+              productId={product?.id}
+              selectedFilaments={selectedFilaments}
+              onFilamentsChange={handleFilamentsChange}
+            />
           </div>
           
           <div className="space-y-4">
@@ -362,12 +368,6 @@ const ProductForm = ({
                 <p>Using global settings: {formatPercent(desiredProfitMargin)} desired profit margin, {formatPercent(platformFees)} platform fees, ${filamentSpoolPrice.toFixed(2)}/kg filament, ${packagingCost.toFixed(2)} packaging cost</p>
               </div>
             </div>
-            
-            <FilamentSelector
-              productId={product?.id}
-              selectedFilaments={selectedFilaments}
-              onFilamentsChange={handleFilamentsChange}
-            />
           </div>
           
           <div className="col-span-1 md:col-span-2 flex justify-end space-x-2 mt-4">
