@@ -12,6 +12,8 @@ export interface Filament {
     notes?: string;
     created_at?: string;
     updated_at?: string;
+    filament_usage_amount?: number;
+    cost?: number; // Cost per kg in USD
 }
 
 export type FilamentFormData = Omit<Filament, 'id' | 'created_at' | 'updated_at'>;

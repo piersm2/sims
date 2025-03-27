@@ -235,6 +235,12 @@ export default function FilamentList({ filaments, onUpdate, onDelete }: Filament
                 >
                   Manufacturer Data {getSortIcon('manufacturer')}
                 </th>
+                <th
+                  scope="col"
+                  className="py-3 px-3 text-left text-xs font-medium text-white uppercase tracking-wider"
+                >
+                  Cost/kg
+                </th>
                 <th scope="col" className="relative py-3 px-3">
                   <span className="sr-only">Actions</span>
                 </th>
@@ -309,6 +315,9 @@ export default function FilamentList({ filaments, onUpdate, onDelete }: Filament
                   </td>
                   <td className="px-3 py-2 text-sm text-black border-r-2 border-black">
                     {filament.manufacturer || '-'}
+                  </td>
+                  <td className="px-3 py-2 text-sm text-black border-r-2 border-black">
+                    ${filament.cost?.toFixed(2) || '0.00'}
                   </td>
                   <td className="px-3 py-2 text-right text-sm font-medium">
                     <div className="flex justify-end space-x-2">

@@ -775,7 +775,7 @@ app.get('/api/products', async (req, res) => {
     // For each product, get its associated filaments
     for (const product of products) {
       const filaments = await db.all(`
-        SELECT f.* 
+        SELECT f.*, pf.filament_usage_amount
         FROM filaments f
         JOIN product_filaments pf ON f.id = pf.filament_id
         WHERE pf.product_id = ?
@@ -801,7 +801,7 @@ app.get('/api/products/:id', async (req, res) => {
     
     // Get associated filaments
     const filaments = await db.all(`
-      SELECT f.* 
+      SELECT f.*, pf.filament_usage_amount
       FROM filaments f
       JOIN product_filaments pf ON f.id = pf.filament_id
       WHERE pf.product_id = ?
@@ -929,7 +929,7 @@ app.delete('/api/products/:id', async (req, res) => {
 app.get('/api/products/:id/filaments', async (req, res) => {
   try {
     const filaments = await db.all(`
-      SELECT f.* 
+      SELECT f.*, pf.filament_usage_amount
       FROM filaments f
       JOIN product_filaments pf ON f.id = pf.filament_id
       WHERE pf.product_id = ?
@@ -983,6 +983,34 @@ app.post('/api/products/:id/filaments', async (req, res) => {
   } catch (error) {
     console.error('Error adding filament to product:', error);
     res.status(500).json({ error: 'Failed to add filament to product' });
+  }
+});
+
+app.patch('/api/products/:productId/filaments/:filamentId', async (req, res) => {
+  try {
+    const { productId, filamentId } = req.params;
+    const { filament_usage_amount } = req.body;
+    
+    // Check if relationship exists
+    const relationship = await db.get(
+      'SELECT * FROM product_filaments WHERE product_id = ? AND filament_id = ?',
+      productId, filamentId
+    );
+    
+    if (!relationship) {
+      return res.status(404).json({ error: 'Relationship not found' });
+    }
+    
+    // Update the usage amount
+    await db.run(
+      'UPDATE product_filaments SET filament_usage_amount = ? WHERE product_id = ? AND filament_id = ?',
+      filament_usage_amount, productId, filamentId
+    );
+    
+    res.json({ message: 'Filament usage amount updated successfully' });
+  } catch (error) {
+    console.error('Error updating filament usage amount:', error);
+    res.status(500).json({ error: 'Failed to update filament usage amount' });
   }
 });
 

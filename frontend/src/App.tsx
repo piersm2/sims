@@ -167,14 +167,29 @@ function App() {
     const totalMinutes = product.print_prep_time + product.post_processing_time
     const laborCost = (totalMinutes / 60) * settings.hourly_rate
     
-    // Calculate filament cost
-    const filamentCost = (product.filament_used / 1000) * settings.filament_spool_price
+    // Calculate total filament used and cost from individual filament amounts and costs
+    let totalFilamentUsed = 0;
+    let totalFilamentCost = 0;
+    
+    if (product.filaments && product.filaments.length > 0) {
+      product.filaments.forEach(filament => {
+        const amount = filament.filament_usage_amount || 0;
+        // Use individual filament cost if set, otherwise fall back to global price
+        const cost = filament.cost || settings.filament_spool_price;
+        totalFilamentUsed += amount;
+        totalFilamentCost += (amount / 1000) * cost; // Convert grams to kg for cost calculation
+      });
+    } else {
+      // Fallback to using the global filament price if no filaments are set
+      totalFilamentUsed = product.filament_used;
+      totalFilamentCost = (product.filament_used / 1000) * settings.filament_spool_price;
+    }
     
     // Calculate wear and tear cost
-    const wearTearCost = filamentCost * (settings.wear_tear_markup / 100)
+    const wearTearCost = totalFilamentCost * (settings.wear_tear_markup / 100)
     
     // Calculate total cost (now including additional parts cost and packaging cost)
-    const totalCost = laborCost + filamentCost + wearTearCost + product.additional_parts_cost + settings.packaging_cost
+    const totalCost = laborCost + totalFilamentCost + wearTearCost + product.additional_parts_cost + settings.packaging_cost
     
     // Calculate suggested price based on desired profit margin
     const platformFeePercent = settings.platform_fees / 100
@@ -195,27 +210,18 @@ function App() {
     // Calculate profit margin
     const profitMargin = sellingPrice > 0 ? (grossProfit / sellingPrice) * 100 : 0
     
-    // Calculate advertising budget - how much can be spent on ads while maintaining desired profit margin
-    const desiredProfitMargin = settings.desired_profit_margin || 55;
-
-    // The current profit margin is (grossProfit / sellingPrice) * 100
-    // If we want to reduce this to the desired profit margin, we need to calculate how much profit we can give up
-    // while still maintaining the desired margin
-
-    // Calculate maximum allowable ad spend while maintaining desired profit margin
+    // Calculate advertising budget
     let advertisingBudget = 0;
-    if (profitMargin > desiredProfitMargin) {
-      // Current profit is higher than desired, so we can spend some on ads
-      // Calculate what the profit would be at the desired margin
-      const profitAtDesiredMargin = (sellingPrice * desiredProfitMargin) / 100;
-      // The difference is what we can spend on ads
+    if (profitMargin > settings.desired_profit_margin) {
+      const profitAtDesiredMargin = (sellingPrice * settings.desired_profit_margin) / 100;
       advertisingBudget = grossProfit - profitAtDesiredMargin;
     }
     
     return {
       ...product,
+      filament_used: totalFilamentUsed,
       labor_cost: laborCost,
-      filament_cost: filamentCost,
+      filament_cost: totalFilamentCost,
       wear_tear_cost: wearTearCost,
       total_cost: totalCost,
       selling_price: sellingPrice,
@@ -524,6 +530,7 @@ function App() {
       if (filaments.length > 0 && newProduct.id) {
         for (const filament of filaments) {
           if (filament.id) {
+            // First add the filament association
             await fetch(`${API_URL}/api/products/${newProduct.id}/filaments`, {
               method: 'POST',
               headers: {
@@ -531,6 +538,17 @@ function App() {
               },
               body: JSON.stringify({ filament_id: filament.id })
             });
+
+            // Then update the usage amount if specified
+            if (filament.filament_usage_amount !== undefined) {
+              await fetch(`${API_URL}/api/products/${newProduct.id}/filaments/${filament.id}`, {
+                method: 'PATCH',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ filament_usage_amount: filament.filament_usage_amount })
+              });
+            }
           }
         }
       }
@@ -574,6 +592,21 @@ function App() {
       });
       
       if (!response.ok) throw new Error('Failed to update product');
+      
+      // Update filament usage amounts if they exist
+      if (product.filaments) {
+        for (const filament of product.filaments) {
+          if (filament.id && filament.filament_usage_amount !== undefined) {
+            await fetch(`${API_URL}/api/products/${product.id}/filaments/${filament.id}`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ filament_usage_amount: filament.filament_usage_amount })
+            });
+          }
+        }
+      }
       
       // Fetch the complete updated product data with filaments
       const updatedProductResponse = await fetch(`${API_URL}/api/products/${product.id}`);

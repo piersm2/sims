@@ -31,7 +31,6 @@ const ProductForm = ({
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     business: 'Super Fantastic',
-    filament_used: 0,
     print_prep_time: 0,
     post_processing_time: 0,
     additional_parts_cost: 0,
@@ -59,7 +58,6 @@ const ProductForm = ({
       setFormData({
         name: product.name,
         business: product.business,
-        filament_used: product.filament_used,
         print_prep_time: product.print_prep_time,
         post_processing_time: product.post_processing_time,
         additional_parts_cost: product.additional_parts_cost || 0,
@@ -76,7 +74,7 @@ const ProductForm = ({
 
   useEffect(() => {
     calculateProfitMargin();
-  }, [formData, hourlyRate, wearTearPercentage, platformFees, filamentSpoolPrice, desiredProfitMargin, packagingCost]);
+  }, [formData, hourlyRate, wearTearPercentage, platformFees, filamentSpoolPrice, desiredProfitMargin, packagingCost, selectedFilaments]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -84,7 +82,6 @@ const ProductForm = ({
     
     // Convert numeric fields to numbers
     if (
-      name === 'filament_used' ||
       name === 'print_prep_time' ||
       name === 'post_processing_time' ||
       name === 'additional_parts_cost' ||
@@ -104,14 +101,25 @@ const ProductForm = ({
     const totalMinutes = formData.print_prep_time + formData.post_processing_time;
     const laborCost = (totalMinutes / 60) * hourlyRate;
     
-    // Calculate filament cost
-    const filamentCost = (formData.filament_used / 1000) * filamentSpoolPrice;
+    // Calculate total filament used and cost from individual filament amounts and costs
+    let totalFilamentUsed = 0;
+    let totalFilamentCost = 0;
+    
+    if (selectedFilaments.length > 0) {
+      selectedFilaments.forEach(filament => {
+        const amount = filament.filament_usage_amount || 0;
+        // Use individual filament cost if set, otherwise fall back to global price
+        const cost = filament.cost || filamentSpoolPrice;
+        totalFilamentUsed += amount;
+        totalFilamentCost += (amount / 1000) * cost; // Convert grams to kg for cost calculation
+      });
+    }
     
     // Calculate wear and tear cost
-    const wearTearCost = filamentCost * (wearTearPercentage / 100);
+    const wearTearCost = totalFilamentCost * (wearTearPercentage / 100);
     
     // Calculate total cost (including additional parts cost and packaging cost)
-    const totalCost = laborCost + filamentCost + wearTearCost + formData.additional_parts_cost + packagingCost;
+    const totalCost = laborCost + totalFilamentCost + wearTearCost + formData.additional_parts_cost + packagingCost;
     
     // Calculate suggested price based on desired profit margin
     // Formula: price = cost / (1 - desiredMargin - platformFeePercent)
@@ -133,24 +141,16 @@ const ProductForm = ({
     // Calculate profit margin
     const profitMargin = sellingPrice > 0 ? (grossProfit / sellingPrice) * 100 : 0;
     
-    // Calculate advertising budget - how much can be spent on ads while maintaining desired profit margin
-    // The current profit margin is (grossProfit / sellingPrice) * 100
-    // If we want to reduce this to the desired profit margin, we need to calculate how much profit we can give up
-    // while still maintaining the desired margin
-
-    // Calculate maximum allowable ad spend while maintaining desired profit margin
+    // Calculate advertising budget
     let advertisingBudget = 0;
     if (profitMargin > desiredProfitMargin) {
-      // Current profit is higher than desired, so we can spend some on ads
-      // Calculate what the profit would be at the desired margin
       const profitAtDesiredMargin = (sellingPrice * desiredProfitMargin) / 100;
-      // The difference is what we can spend on ads
       advertisingBudget = grossProfit - profitAtDesiredMargin;
     }
     
     setCalculations({
       labor_cost: laborCost,
-      filament_cost: filamentCost,
+      filament_cost: totalFilamentCost,
       wear_tear_cost: wearTearCost,
       total_cost: totalCost,
       selling_price: sellingPrice,
@@ -164,13 +164,16 @@ const ProductForm = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Include the product ID if editing an existing product
-    const submittedData = {
+    
+    // Calculate total filament used from individual filament amounts
+    const totalFilamentUsed = selectedFilaments.reduce((sum, filament) => 
+      sum + (filament.filament_usage_amount || 0), 0);
+    
+    onSubmit({
       ...formData,
-      id: product?.id,
+      filament_used: totalFilamentUsed,
       filaments: selectedFilaments
-    };
-    onSubmit(submittedData);
+    });
   };
 
   const formatCurrency = (amount: number) => {
@@ -235,20 +238,6 @@ const ProductForm = ({
                 <option value="Super Fantastic">Super Fantastic</option>
                 <option value="Cedar & Sail">Cedar & Sail</option>
               </select>
-            </div>
-            
-            <div>
-              <label className="block text-xs font-medium uppercase tracking-wider">Filament Used (grams)</label>
-              <input
-                type="number"
-                name="filament_used"
-                value={formData.filament_used}
-                onChange={handleChange}
-                className="mt-1 block w-full border border-black rounded-none p-2 text-sm"
-                min="0"
-                step="0.1"
-                required
-              />
             </div>
             
             <div>

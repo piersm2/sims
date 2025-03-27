@@ -33,7 +33,7 @@ export type ProductWithCalculations = Product & ProductCalculations;
 export interface ProductFormData {
   name: string;
   business: 'Super Fantastic' | 'Cedar & Sail';
-  filament_used: number;
+  filament_used?: number;
   print_prep_time: number;
   post_processing_time: number;
   additional_parts_cost: number;

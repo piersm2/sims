@@ -287,6 +287,25 @@ export default function FilamentForm({ isOpen, filament, onClose, onSubmit }: Fi
 
                         <div>
                           <label className="block text-xs font-medium text-black uppercase tracking-wider mb-1">
+                            {'>>'} Cost per kg ($)
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            {...register('cost', {
+                              required: 'Cost is required',
+                              min: { value: 0, message: 'Cost must be positive' }
+                            })}
+                            className="mt-1 block w-full bg-white border border-black rounded-none px-3 py-2 text-black text-base"
+                          />
+                          {errors.cost && (
+                            <p className="mt-2 text-xs text-red-600">! {errors.cost.message}</p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-black uppercase tracking-wider mb-1">
                             {'>>'} Manufacturer Data
                           </label>
                           <div className="relative">
