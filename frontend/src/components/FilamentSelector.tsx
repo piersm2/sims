@@ -16,6 +16,7 @@ const FilamentSelector = ({ productId, selectedFilaments, onFilamentsChange }: F
   const [filamentSearch, setFilamentSearch] = useState('');
   const filamentDropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const usageAmountTimeoutRef = useRef<{ [key: number]: NodeJS.Timeout }>({});
 
   // Fetch all filaments
   useEffect(() => {
@@ -125,41 +126,58 @@ const FilamentSelector = ({ productId, selectedFilaments, onFilamentsChange }: F
     }
   };
 
-  // Update filament usage amount
+  // Update filament usage amount with debouncing
   const handleUsageAmountChange = async (filamentId: number, amount: number) => {
-    try {
-      setLoading(true);
-      
-      // If we have a productId, update the usage amount in the database
-      if (productId) {
-        const response = await fetch(`${API_URL}/api/products/${productId}/filaments/${filamentId}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ filament_usage_amount: amount }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to update filament usage amount');
-        }
-      }
-
-      // Update the filament in selectedFilaments
-      const updatedFilaments = selectedFilaments.map(f => {
-        if (f.id === filamentId) {
-          return { ...f, filament_usage_amount: amount };
-        }
-        return f;
-      });
-      onFilamentsChange(updatedFilaments);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setLoading(false);
+    // Clear any existing timeout for this filament
+    if (usageAmountTimeoutRef.current[filamentId]) {
+      clearTimeout(usageAmountTimeoutRef.current[filamentId]);
     }
+
+    // Update the filament in selectedFilaments immediately for UI responsiveness
+    const updatedFilaments = selectedFilaments.map(f => {
+      if (f.id === filamentId) {
+        return { ...f, filament_usage_amount: amount };
+      }
+      return f;
+    });
+    onFilamentsChange(updatedFilaments);
+
+    // Set a new timeout to make the API call after 500ms of no changes
+    usageAmountTimeoutRef.current[filamentId] = setTimeout(async () => {
+      try {
+        setLoading(true);
+        
+        // If we have a productId, update the usage amount in the database
+        if (productId) {
+          const response = await fetch(`${API_URL}/api/products/${productId}/filaments/${filamentId}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ filament_usage_amount: amount }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update filament usage amount');
+          }
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    }, 500);
   };
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(usageAmountTimeoutRef.current).forEach(timeout => {
+        clearTimeout(timeout);
+      });
+    };
+  }, []);
 
   // Get available filaments (those not already selected)
   const availableFilaments = allFilaments.filter(
