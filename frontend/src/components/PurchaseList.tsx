@@ -137,56 +137,75 @@ export default function PurchaseList({ items, filaments, onAdd, onUpdate, onDele
                 </div>
 
                 <div className="mt-4 space-y-2">
-                    {items.map((item) => {
-                        const filament = filaments.find(f => f.id === item.filament_id);
-                        if (!filament) return null;
-
-                        return (
-                            <div key={item.id} className="flex items-center justify-between border-2 border-black p-2">
-                                <div className="flex items-center space-x-2">
-                                    <div 
-                                        className="h-4 w-4 border border-black"
-                                        style={{ backgroundColor: filament.color }}
-                                    />
-                                    <div>
-                                        <div>{filament.name}</div>
-                                        <div className="text-gray-500 text-xs">{filament.manufacturer}</div>
-                                    </div>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <button
-                                        onClick={() => onUpdate({ ...item, quantity: Math.max(1, item.quantity - 1) })}
-                                        className="px-2 border border-black hover:bg-black hover:text-white"
-                                    >
-                                        -
-                                    </button>
-                                    <span className="w-12 text-center">{item.quantity}</span>
-                                    <button
-                                        onClick={() => onUpdate({ ...item, quantity: item.quantity + 1 })}
-                                        className="px-2 border border-black hover:bg-black hover:text-white"
-                                    >
-                                        +
-                                    </button>
-                                    <button
-                                        onClick={() => handleToggleOrdered(item as PurchaseItem)}
-                                        className={`px-2 border text-xs font-bold uppercase tracking-wider ${
-                                            item.ordered 
-                                                ? 'border-green-600 text-green-600 hover:bg-green-50' 
-                                                : 'border-black text-black hover:bg-gray-50'
-                                        }`}
-                                    >
-                                        {item.ordered ? '✓' : '○'}
-                                    </button>
-                                    <button
-                                        onClick={() => onDelete(item.id!)}
-                                        className="px-2 border border-black text-white bg-red-600 hover:bg-red-700"
-                                    >
-                                        ×
-                                    </button>
-                                </div>
+                    {Object.entries(
+                        items.reduce((acc, item) => {
+                            const filament = filaments.find(f => f.id === item.filament_id);
+                            if (!filament) return acc;
+                            
+                            const manufacturer = filament.manufacturer || 'Uncategorized';
+                            if (!acc[manufacturer]) {
+                                acc[manufacturer] = [];
+                            }
+                            acc[manufacturer].push(item);
+                            return acc;
+                        }, {} as Record<string, typeof items>)
+                    ).map(([manufacturer, manufacturerItems]) => (
+                        <div key={manufacturer} className="space-y-2">
+                            <div className="font-medium text-sm text-gray-500 uppercase tracking-wider px-2">
+                                {manufacturer}
                             </div>
-                        );
-                    })}
+                            {manufacturerItems.map((item) => {
+                                const filament = filaments.find(f => f.id === item.filament_id);
+                                if (!filament) return null;
+
+                                return (
+                                    <div key={item.id} className="flex items-center justify-between border-2 border-black p-2">
+                                        <div className="flex items-center space-x-2">
+                                            <div 
+                                                className="h-4 w-4 border border-black"
+                                                style={{ backgroundColor: filament.color }}
+                                            />
+                                            <div>
+                                                <div>{filament.name}</div>
+                                                <div className="text-gray-500 text-xs">{filament.manufacturer}</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <button
+                                                onClick={() => onUpdate({ ...item, quantity: Math.max(1, item.quantity - 1) })}
+                                                className="px-2 border border-black hover:bg-black hover:text-white"
+                                            >
+                                                -
+                                            </button>
+                                            <span className="w-12 text-center">{item.quantity}</span>
+                                            <button
+                                                onClick={() => onUpdate({ ...item, quantity: item.quantity + 1 })}
+                                                className="px-2 border border-black hover:bg-black hover:text-white"
+                                            >
+                                                +
+                                            </button>
+                                            <button
+                                                onClick={() => handleToggleOrdered(item as PurchaseItem)}
+                                                className={`px-2 border text-xs font-bold uppercase tracking-wider ${
+                                                    item.ordered 
+                                                        ? 'border-green-600 text-green-600 hover:bg-green-50' 
+                                                        : 'border-black text-black hover:bg-gray-50'
+                                                }`}
+                                            >
+                                                {item.ordered ? '✓' : '○'}
+                                            </button>
+                                            <button
+                                                onClick={() => onDelete(item.id!)}
+                                                className="px-2 border border-black text-white bg-red-600 hover:bg-red-700"
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>
