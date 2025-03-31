@@ -801,7 +801,6 @@ function App() {
                   <PrintQueue
                     items={queueItems}
                     printers={printers}
-                    filaments={filaments}
                     onAdd={handleAddQueueItem}
                     onUpdate={handleUpdateQueueItem}
                     onDelete={handleDeleteQueueItem}
