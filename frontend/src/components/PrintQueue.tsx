@@ -28,13 +28,14 @@ const ItemTypes = {
 interface QueueItemProps {
     item: PrintQueueItem;
     filaments: Filament[];
+    printers: Printer[];
     index: number;
     onUpdate: (item: PrintQueueItem) => void;
     onDelete: (id: number) => void;
     moveItem: (dragIndex: number, hoverIndex: number) => void;
 }
 
-const QueueItem = ({ item, filaments, index, onUpdate, onDelete, moveItem }: QueueItemProps) => {
+const QueueItem = ({ item, filaments, printers, index, onUpdate, onDelete, moveItem }: QueueItemProps) => {
     const ref = useRef<HTMLDivElement>(null);
     
     const [{ isDragging }, drag] = useDrag({
@@ -109,9 +110,8 @@ const QueueItem = ({ item, filaments, index, onUpdate, onDelete, moveItem }: Que
                 <div>
                     <div className="font-medium">{item.item_name}</div>
                     <div className="text-sm text-gray-600">
-                        {item.printer ? `Printer: ${item.printer.name}` : 'No printer assigned'}
                         {item.color && (
-                            <span className="flex items-center mt-1">
+                            <span className="flex items-center">
                                 Color: 
                                 <div
                                     className="h-3 w-3 border border-black ml-1"
@@ -126,6 +126,18 @@ const QueueItem = ({ item, filaments, index, onUpdate, onDelete, moveItem }: Que
                 </div>
                 <div className="flex space-x-2">
                     <select
+                        value={item.printer_id || ''}
+                        onChange={(e) => onUpdate({ ...item, printer_id: e.target.value ? Number(e.target.value) : undefined })}
+                        className="text-xs border border-black px-2 py-1 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:6px_6px] bg-[right_8px_center] bg-no-repeat pr-6"
+                    >
+                        <option value="">No Printer</option>
+                        {printers.map((printer) => (
+                            <option key={printer.id} value={printer.id}>
+                                {printer.name}
+                            </option>
+                        ))}
+                    </select>
+                    <select
                         value={item.status}
                         onChange={(e) => onUpdate({ ...item, status: e.target.value as PrintQueueItem['status'] })}
                         className="text-xs border border-black px-2 py-1 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:6px_6px] bg-[right_8px_center] bg-no-repeat pr-6"
@@ -136,9 +148,9 @@ const QueueItem = ({ item, filaments, index, onUpdate, onDelete, moveItem }: Que
                     </select>
                     <button
                         onClick={() => item.id && onDelete(item.id)}
-                        className="text-xs border border-black px-2 py-1 hover:bg-red-100"
+                        className="px-2 border border-black text-white bg-red-600 hover:bg-red-700"
                     >
-                        Delete
+                        ×
                     </button>
                 </div>
             </div>
@@ -344,6 +356,7 @@ export default function PrintQueue({ items, printers, filaments, onAdd, onUpdate
                                 key={item.id}
                                 item={item}
                                 filaments={filaments}
+                                printers={printers}
                                 index={index}
                                 onUpdate={onUpdate}
                                 onDelete={onDelete}
