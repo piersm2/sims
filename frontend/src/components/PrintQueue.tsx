@@ -1,13 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { PrintQueueItem, Printer } from '../types/printer';
-import { Filament } from '../types/filament';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
 interface PrintQueueProps {
     items: PrintQueueItem[];
     printers: Printer[];
-    filaments: Filament[];
     onAdd: (item: PrintQueueItem) => void;
     onUpdate: (item: PrintQueueItem) => void;
     onDelete: (id: number) => void;
@@ -26,7 +24,6 @@ const ItemTypes = {
 
 interface QueueItemProps {
     item: PrintQueueItem;
-    filaments: Filament[];
     printers: Printer[];
     index: number;
     onUpdate: (item: PrintQueueItem) => void;
@@ -34,7 +31,7 @@ interface QueueItemProps {
     moveItem: (dragIndex: number, hoverIndex: number) => void;
 }
 
-const QueueItem = ({ item, filaments, printers, index, onUpdate, onDelete, moveItem }: QueueItemProps) => {
+const QueueItem = ({ item, printers, index, onUpdate, onDelete, moveItem }: QueueItemProps) => {
     const ref = useRef<HTMLDivElement>(null);
     
     const [{ isDragging }, drag] = useDrag({
@@ -143,7 +140,7 @@ const QueueItem = ({ item, filaments, printers, index, onUpdate, onDelete, moveI
     );
 };
 
-export default function PrintQueue({ items, printers, filaments, onAdd, onUpdate, onDelete, onReorder }: PrintQueueProps) {
+export default function PrintQueue({ items, printers, onAdd, onUpdate, onDelete, onReorder }: PrintQueueProps) {
     const [newItem, setNewItem] = useState('');
     const [selectedPrinter, setSelectedPrinter] = useState<number | undefined>();
     const [queueItems, setQueueItems] = useState<PrintQueueItem[]>([]);
@@ -231,7 +228,6 @@ export default function PrintQueue({ items, printers, filaments, onAdd, onUpdate
                             <QueueItem
                                 key={item.id}
                                 item={item}
-                                filaments={filaments}
                                 printers={printers}
                                 index={index}
                                 onUpdate={onUpdate}
