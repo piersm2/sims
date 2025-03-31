@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { PrintQueueItem, Printer } from '../types/printer';
 import { Filament } from '../types/filament';
-import PrinterForm from './PrinterForm';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
@@ -109,20 +108,6 @@ const QueueItem = ({ item, filaments, printers, index, onUpdate, onDelete, moveI
             <div className="flex justify-between items-start">
                 <div>
                     <div className="font-medium">{item.item_name}</div>
-                    <div className="text-sm text-gray-600">
-                        {item.color && (
-                            <span className="flex items-center">
-                                Color: 
-                                <div
-                                    className="h-3 w-3 border border-black ml-1"
-                                    style={{ backgroundColor: item.color }}
-                                />
-                                <span className="ml-1">
-                                    {filaments.find(f => f.color === item.color)?.name || item.color}
-                                </span>
-                            </span>
-                        )}
-                    </div>
                 </div>
                 <div className="flex space-x-2">
                     <select
@@ -161,53 +146,12 @@ const QueueItem = ({ item, filaments, printers, index, onUpdate, onDelete, moveI
 export default function PrintQueue({ items, printers, filaments, onAdd, onUpdate, onDelete, onReorder }: PrintQueueProps) {
     const [newItem, setNewItem] = useState('');
     const [selectedPrinter, setSelectedPrinter] = useState<number | undefined>();
-    const [selectedColor, setSelectedColor] = useState('');
-    const [colorSearch, setColorSearch] = useState('');
-    const [isColorDropdownOpen, setIsColorDropdownOpen] = useState(false);
-    const [showPrinterForm, setShowPrinterForm] = useState(false);
-    const colorDropdownRef = useRef<HTMLDivElement>(null);
     const [queueItems, setQueueItems] = useState<PrintQueueItem[]>([]);
 
     // Update local state when props change
     useEffect(() => {
         setQueueItems(items);
     }, [items]);
-
-    // Get unique colors and their associated filaments
-    const colorOptions = Array.from(
-        new Set(filaments.map(f => f.color))
-    ).map(color => {
-        const filament = filaments.find(f => f.color === color);
-        return {
-            color,
-            name: filament?.name || '',
-            manufacturer: filament?.manufacturer || ''
-        };
-    }).sort((a, b) => a.name.localeCompare(b.name));
-
-    const filteredColors = colorOptions.filter(option => 
-        option.name.toLowerCase().includes(colorSearch.toLowerCase()) ||
-        option.manufacturer.toLowerCase().includes(colorSearch.toLowerCase())
-    );
-
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (colorDropdownRef.current && !colorDropdownRef.current.contains(event.target as Node)) {
-                setIsColorDropdownOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    const handleColorSelect = (color: string) => {
-        setSelectedColor(color);
-        setColorSearch('');
-        setIsColorDropdownOpen(false);
-    };
-
-    const selectedFilament = filaments.find(f => f.color === selectedColor);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -216,18 +160,11 @@ export default function PrintQueue({ items, printers, filaments, onAdd, onUpdate
         onAdd({
             item_name: newItem.trim(),
             printer_id: selectedPrinter,
-            color: selectedColor || undefined,
             status: 'pending'
         });
 
         setNewItem('');
         setSelectedPrinter(undefined);
-        setSelectedColor('');
-        setColorSearch('');
-    };
-
-    const handlePrinterAdded = () => {
-        setShowPrinterForm(false);
     };
 
     const moveItem = (dragIndex: number, hoverIndex: number) => {
@@ -258,87 +195,26 @@ export default function PrintQueue({ items, printers, filaments, onAdd, onUpdate
 
                 <form onSubmit={handleSubmit} className="p-4 border-b-2 border-black">
                     <div className="space-y-3">
-                        <input
-                            type="text"
-                            value={newItem}
-                            onChange={(e) => setNewItem(e.target.value)}
-                            placeholder="Enter print item"
-                            className="w-full px-3 py-2 border-2 border-black text-sm"
-                        />
-                        <div className="relative" ref={colorDropdownRef}>
-                            <div 
-                                className="w-full px-3 py-2 border-2 border-black text-sm flex items-center cursor-pointer"
-                                onClick={() => setIsColorDropdownOpen(!isColorDropdownOpen)}
-                            >
-                                {selectedColor ? (
-                                    <>
-                                        <div 
-                                            className="h-4 w-4 border border-black mr-2"
-                                            style={{ backgroundColor: selectedColor }}
-                                        />
-                                        <span>{selectedFilament?.name}</span>
-                                        <span className="text-gray-500 text-xs ml-2">• {selectedFilament?.manufacturer}</span>
-                                    </>
-                                ) : (
-                                    <span className="text-gray-500">Select Filament (Optional)</span>
-                                )}
-                            </div>
-                            {isColorDropdownOpen && (
-                                <div className="absolute z-10 w-full mt-1 bg-white border-2 border-black shadow-lg max-h-64 overflow-y-auto">
-                                    <input
-                                        type="text"
-                                        value={colorSearch}
-                                        onChange={(e) => setColorSearch(e.target.value)}
-                                        placeholder="Search filaments..."
-                                        className="w-full px-3 py-2 border-b-2 border-black text-sm"
-                                        onClick={(e) => e.stopPropagation()}
-                                    />
-                                    <div className="divide-y divide-black">
-                                        {filteredColors.map(({ color, name, manufacturer }) => (
-                                            <div
-                                                key={color}
-                                                className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
-                                                onClick={() => handleColorSelect(color)}
-                                            >
-                                                <div 
-                                                    className="h-4 w-4 border border-black mr-2"
-                                                    style={{ backgroundColor: color }}
-                                                />
-                                                <div>
-                                                    <div>{name}</div>
-                                                    <div className="text-gray-500 text-xs">{manufacturer}</div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                        {filteredColors.length === 0 && (
-                                            <div className="px-3 py-2 text-gray-500 text-sm">
-                                                No filaments found
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
                         <div className="flex space-x-2">
+                            <input
+                                type="text"
+                                value={newItem}
+                                onChange={(e) => setNewItem(e.target.value)}
+                                placeholder="Enter print item"
+                                className="flex-1 px-3 py-2 border-2 border-black text-sm"
+                            />
                             <select
                                 value={selectedPrinter || ''}
                                 onChange={(e) => setSelectedPrinter(e.target.value ? Number(e.target.value) : undefined)}
-                                className="flex-1 px-3 py-2 border-2 border-black text-sm appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:8px_8px] bg-[right_12px_center] bg-no-repeat"
+                                className="w-48 px-3 py-2 border-2 border-black text-sm appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:8px_8px] bg-[right_12px_center] bg-no-repeat"
                             >
-                                <option value="">Select Printer (Optional)</option>
+                                <option value="">Printer (Optional)</option>
                                 {printers.map((printer) => (
                                     <option key={printer.id} value={printer.id}>
                                         {printer.name}
                                     </option>
                                 ))}
                             </select>
-                            <button
-                                type="button"
-                                onClick={() => setShowPrinterForm(true)}
-                                className="px-2 py-1 border border-black text-xs hover:bg-gray-100"
-                            >
-                                +
-                            </button>
                         </div>
                         <button
                             type="submit"
@@ -371,10 +247,6 @@ export default function PrintQueue({ items, printers, filaments, onAdd, onUpdate
                     </div>
                 </DndProvider>
             </div>
-
-            {showPrinterForm && (
-                <PrinterForm onPrinterAdded={handlePrinterAdded} />
-            )}
         </div>
     );
 } 
